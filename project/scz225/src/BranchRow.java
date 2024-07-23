@@ -1,17 +1,17 @@
 import java.util.ArrayList;
 public class BranchRow{
-    public final int branch_id;
+    public final String branch_id;
     public String branch_type;
 
-    public BranchRow(int branch_id, String branch_type){
+    public BranchRow(String branch_id, String branch_type){
         this.branch_id = branch_id;
-        this.branch_id = branch_type;
+        this.branch_type = branch_type;
     }
 
     /**
      * Gets the branch ID.
      */
-    public int getBranchId() {
+    public String getBranchId() {
         return branch_id;
     }
 

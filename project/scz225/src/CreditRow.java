@@ -1,6 +1,6 @@
 import java.util.ArrayList;
 public class CreditRow{
-    public final int card_id;
+    public final String card_id;
     public double interest_rate;
     public double limit;
     public double running_balance;
@@ -8,7 +8,7 @@ public class CreditRow{
     /**
      * Constructor for CreditRow.
      */
-    public CreditRow(int card_id, double interest_rate, double limit, double running_balance, double balance_due) {
+    public CreditRow(String card_id, double interest_rate, double limit, double running_balance, double balance_due) {
         this.card_id = card_id;
         this.interest_rate = interest_rate;
         this.limit = limit;
@@ -19,7 +19,7 @@ public class CreditRow{
     /**
      * Getter for Card ID.
      */
-    public int getCardID() {
+    public String getCardID() {
         return card_id;
     }
 

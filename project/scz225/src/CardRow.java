@@ -1,12 +1,12 @@
 import java.util.ArrayList;
 public class CardRow{
-    public final int card_id;
+    public final String card_id;
     public String card_type;
-    public final int account_id;
-    public final int customer_id;
-    public final int customer_name;
+    public final String account_id;
+    public final String customer_id;
+    public String customer_name;
     
-    public CardRow(int card_id, String card_type, int account_id, int customer_id, String customer_name) {
+    public CardRow(String card_id, String card_type, String account_id, String customer_id, String customer_name) {
         this.card_id = card_id;
         this.card_type = card_type;
         this.account_id = account_id;
@@ -17,7 +17,7 @@ public class CardRow{
     /**
      * Gets the card ID.
      */
-    public int getCardId() {
+    public String getCardId() {
         return card_id;
     }
 
@@ -38,14 +38,14 @@ public class CardRow{
     /**
      * Gets the account ID.
      */
-    public int getAccountId() {
+    public String getAccountId() {
         return account_id;
     }
 
     /**
      * Gets the customer ID.
      */
-    public int getCustomerId() {
+    public String getCustomerId() {
         return customer_id;
     }
 

@@ -1,11 +1,11 @@
 import java.util.ArrayList;
 public class AccountRow{
-    public final int account_id;
+    public final String account_id;
     public String account_type;
     public double balance;
     public double interest_rate;
 
-    public AccountRow(int account_id, String account_type, double balance, double interest_rate) {
+    public AccountRow(String account_id, String account_type, double balance, double interest_rate) {
         this.account_id = account_id;
         this.account_type = account_type;
         this.balance = balance;
@@ -15,7 +15,7 @@ public class AccountRow{
     /*
     * Getter for Account ID
     */
-    public int getAccountID() {
+    public String getAccountID() {
         return account_id;
     }
     /*

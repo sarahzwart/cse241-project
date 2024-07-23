@@ -1,16 +1,16 @@
 import java.util.ArrayList;
 public class LoanRow {
-    public final int loan_id;
+    public final String loan_id;
     public String loan_type;
     public double amount;
     public double interest_rate;
     public double monthly_payment;
-    public final int customer_id;
+    public final String customer_id;
 
     /** 
      * Constructor for LoanRow. 
     */
-    public LoanRow(int loan_id, String loan_type, double amount, double interest_rate, double monthly_payment, int customer_id) {
+    public LoanRow(String loan_id, String loan_type, double amount, double interest_rate, double monthly_payment, String customer_id) {
         this.loan_id = loan_id;
         this.loan_type = loan_type;
         this.amount = amount;
@@ -22,7 +22,7 @@ public class LoanRow {
     /** 
      * Getter for Loan ID. 
      */
-    public int getLoanID() {
+    public String  getLoanID() {
         return loan_id;
     }
 
@@ -85,7 +85,7 @@ public class LoanRow {
     /** 
      * Getter for Customer ID. 
      */
-    public int getCustomerID() {
+    public String getCustomerID() {
         return customer_id;
     }
     /** 

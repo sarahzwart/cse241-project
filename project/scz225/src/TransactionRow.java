@@ -2,7 +2,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 
 public class TransactionRow{
-    public final int transaction_id;
+    public final String transaction_id;
     public String transaction_type;
     public Timestamp transaction_date;
     public double amount;
@@ -10,8 +10,8 @@ public class TransactionRow{
     public final String account_id;
     public final String branch_id;
 
-    public TransactionRow(int transaction_id, String transaction_type, Timestamp transaction_date, double amount, String customer_id, String account_id, String branch_id) {
-        this.transaction_ID = transaction_ID;
+    public TransactionRow(String transaction_id, String transaction_type, Timestamp transaction_date, double amount, String customer_id, String account_id, String branch_id) {
+        this.transaction_id = transaction_id;
         this.transaction_type = transaction_type;
         this.transaction_date = transaction_date;
         this.amount = amount;
@@ -23,8 +23,8 @@ public class TransactionRow{
     /**
      * Getter for Transaction ID
      */
-    public int getTransactionID() {
-        return transaction_ID;
+    public String getTransactionID() {
+        return transaction_id;
     }
     /**
      * Getter for Transaction Type
@@ -85,7 +85,7 @@ public class TransactionRow{
      */
     public void printTransactionRow() {
         System.out.printf("| %-14d | %-15s | %-19s | %-10.2f | %-12s | %-10s | %-10s |\n", 
-                          transaction_ID, transaction_type, transaction_date, amount, customer_id, account_id, branch_id);
+                          transaction_id, transaction_type, transaction_date, amount, customer_id, account_id, branch_id);
     }
     /**
      * Print all transactions
@@ -94,8 +94,8 @@ public class TransactionRow{
        System.out.printf("| %-14s | %-15s | %-19s | %-10s | %-12s | %-10s | %-10s |\n", 
                           "Transaction ID", "Transaction Type", "Transaction Date", "Amount", "Customer ID", "Account ID", "Branch ID");
     System.out.println("----------------------------------------------------------------------------------------------");
-      for (ReviewRow review : reviews) {
-          review.printTReviewRow();
+      for (TransactionRow review : transactions) {
+          review.printTransactionRow();
       }
   }
 }
