@@ -484,6 +484,25 @@ public class Database{
         return customer;
     }
 
+    Customer selectOneCustomerByName(String customer_name) {
+        Customer customer = null;
+        try {
+            selectOneCustomerByName.setString(1, customer_name);
+            ResultSet rs = selectOneCustomerByName.executeQuery();
+            if (rs.next()) {
+                String cust_id = rs.getString("customer_id");
+                String cust_name = rs.getString("customer_name");
+                Date birthday = rs.getDate("birthday");
+                String address = rs.getString("address");
+                customer = new Customer(cust_id, cust_name, birthday, address);
+            }
+        } catch (SQLException e) {
+            System.out.println("Error in selectOneCustomerByName");
+            e.printStackTrace();
+        }
+        return customer;
+    }
+
     // Loan
     LoanRow selectOneLoan(String loan_id) {
         LoanRow loan = null;
