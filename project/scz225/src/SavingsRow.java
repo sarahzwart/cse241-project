@@ -49,7 +49,7 @@ public class SavingsRow{
      * Print savings row.
      */
     public void printSavingsRow() {
-        System.out.printf("| %-10d | %-15.2f | %-10.2f |\n",
+        System.out.printf("| %-10s | %-15.2f | %-10.2f |\n",
                 account_id, minimum_balance, penalty);
     }
 

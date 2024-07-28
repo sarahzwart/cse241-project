@@ -10,7 +10,11 @@ public class Database{
     * be null. Otherwise, there is a valid open connection
     */
     private Connection databaseConnection;
-
+    /**
+     * Getting Customer Accounts
+     */
+    private PreparedStatement getAccountByCustomer;
+    private PreparedStatement insertOwnership;
     /**
      * Prepared Statements for Account Table
      */
@@ -18,6 +22,13 @@ public class Database{
     private PreparedStatement selectOneAccount;
     private PreparedStatement selectAllAccountByType;
     private PreparedStatement selectAllAccountByBalance;
+    private PreparedStatement addToAccountAmount;
+    private PreparedStatement subtractFromAccountAmount;
+
+    private PreparedStatement getMinimumBalance;
+    private PreparedStatement getTypeOfAccount;
+    private PreparedStatement getSavingsRow;
+
 
     /**
      * Prepared statements for Branch Table
@@ -106,8 +117,24 @@ public class Database{
         }
 
         // Set Up Prepared Statements
-        try {
 
+        /*UPDATE transaction
+SET amount = amount + 100 -- Increase the amount by 100
+WHERE customer_id = 'C001' */
+        try {
+            database.addToAccountAmount = database.databaseConnection.prepareStatement(
+                "UPDATE Account SET balance = balance + ? WHERE account_id = ?"
+            );
+            database.subtractFromAccountAmount = database.databaseConnection.prepareStatement(
+                "UPDATE Account SET balance = balance - ? WHERE account_id = ?"
+            );
+            database.getMinimumBalance = database.databaseConnection.prepareStatement(
+                "SELECT minimum_balance FROM Savings WHERE account_id = ?"
+            );
+
+            database.getAccountByCustomer = database.databaseConnection.prepareStatement(
+                "SELECT account_id FROM Account_Ownership where customer_id = ?"
+            );
             // ACCOUNTS
             database.selectAllAccount = database.databaseConnection.prepareStatement(
                 "SELECT * FROM Account"
@@ -143,6 +170,7 @@ public class Database{
             database.selectOneCardByType = database.databaseConnection.prepareStatement(
                 "SELECT * FROM Card WHERE card_type = ? and customer_id = ?"
             );
+
 
             // CREDIT
             database.selectAllCredit = database.databaseConnection.prepareStatement(
@@ -194,13 +222,16 @@ public class Database{
             // PREPARED STATEMENTS FOR CREATING DATA
             database.insertAccount = database.databaseConnection.prepareStatement(
                 "INSERT INTO Account(account_type, balance, interest_rate) VALUES (?, ?, ?)", 
-                Statement.RETURN_GENERATED_KEYS);
+                new String[]{"account_id"});
             /*database.insertCard = database.databaseConnection.prepareStatement(
                 //NEED TO INCREMENT
             ;
             database.insertCreditCard = database.databaseConnection.prepareStatement(
                 //NEED TO INCREMENT
             );*/
+            database.insertOwnership = database.databaseConnection.prepareStatement(
+                "INSERT INTO Account_Ownership (account_id, customer_id) VALUES (?, ?)"
+            );
             database.insertCustomer = database.databaseConnection.prepareStatement(
                 "INSERT INTO Customer (customer_name, birthday, address) VALUES (?, ?, ?)"
             );
@@ -241,9 +272,82 @@ public class Database{
         databaseConnection = null;
         return true;
     }
-    // (account_type, balance, interest_rate
+    // account_type, balance, interest_rate
     // insert methods
-    int insertAccount(String account_type, double balance, double interest_rate){
+
+    public void addToAccountAmount(double deposit_amount, String account_id) {
+        try {
+            addToAccountAmount.setDouble(1, deposit_amount);
+            addToAccountAmount.setString(2, account_id);
+            int rowsAffected = addToAccountAmount.executeUpdate();
+            if (rowsAffected == 0) {
+                System.out.println("No account found with the provided account_id.");
+            } else {
+                System.out.println("Deposit successful.");
+            }
+        } catch (SQLException e) {
+            System.out.println("Error in addToAccountAmount");
+            e.printStackTrace();
+        }
+    }
+
+    void subtractFromAccountAmount(double deposit_amount, String account_id){
+        try{
+            subtractFromAccountAmount.setDouble(1, deposit_amount);
+            subtractFromAccountAmount.setString(2, account_id);
+            subtractFromAccountAmount.executeUpdate();
+        } catch (SQLException e){
+            System.out.println("Error in subtractFromAccountAmount");
+            e.printStackTrace();
+        }
+    }
+
+    double getMinimumBalance(String account_id) {
+        try {
+            getMinimumBalance.setString(1, account_id);
+            ResultSet rs = getMinimumBalance.executeQuery();
+            if (rs.next()) {
+                return rs.getDouble("minimum_balance");
+            }
+        } catch (SQLException e) {
+            System.out.println("Error in getMinimumBalance");
+            e.printStackTrace();
+        }
+        return 0.0;
+    }
+
+    ArrayList<AccountRow> getAccountByCustomer(String customer_id){
+        ArrayList<String> account_ids = new ArrayList<String>();
+        try {
+            getAccountByCustomer.setString(1, customer_id);
+            ResultSet rs = getAccountByCustomer.executeQuery();
+            while (rs.next()) {
+                account_ids.add(rs.getString("account_id"));
+            }
+            rs.close();
+        } catch (SQLException e) {
+            System.out.println("Error in selectOneTransaction");
+            e.printStackTrace();
+        }
+        ArrayList<AccountRow> accountRow = new ArrayList<AccountRow>();
+        for (int i = 0; i < account_ids.size(); i++) {
+            accountRow.add(selectOneAccount(account_ids.get(i)));
+        }
+        return accountRow;
+    }
+
+    String insertOwnership(String account_id, String customer_id){
+        try{
+            insertOwnership.setString(1, account_id);
+            insertOwnership.setString(2, customer_id);
+            insertOwnership.executeUpdate();
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    String insertAccount(String account_type, double balance, double interest_rate){
         try {
             insertAccount.setString(1, account_type);
             insertAccount.setDouble(2, balance);
@@ -253,17 +357,17 @@ public class Database{
             if (affectedRows > 0){
                 ResultSet generatedKeys = insertAccount.getGeneratedKeys();
                 if(generatedKeys.next()){
-                    int newAccountId = generatedKeys.getInt(1);
+                    String newAccountId = generatedKeys.getString(1);
                     return newAccountId;
                 }
             }
         } catch (SQLException e){
             e.printStackTrace();
         }
-        return -1;
+        return null;
     }
 
-    int insertCustomer(String customer_name, Date birthday, String address) {
+    String insertCustomer(String customer_name, Date birthday, String address) {
         try {
             insertCustomer.setString(1, customer_name);
             insertCustomer.setDate(2, birthday);
@@ -273,16 +377,16 @@ public class Database{
             if (affectedRows > 0) {
                 ResultSet generatedKeys = insertCustomer.getGeneratedKeys();
                 if (generatedKeys.next()) {
-                    return generatedKeys.getInt(1);
+                    return generatedKeys.getString(1);
                 }
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return -1;
+        return null;
     }
 
-    int insertLoan(String loan_type, double amount, double interest_rate, double monthly_payment, String customer_id){
+    String insertLoan(String loan_type, double amount, double interest_rate, double monthly_payment, String customer_id){
         try {
             insertLoan.setString(1, loan_type);
             insertLoan.setDouble(2, amount);
@@ -294,32 +398,25 @@ public class Database{
             if (affectedRows > 0) {
                 ResultSet generatedKeys = insertLoan.getGeneratedKeys();
                 if (generatedKeys.next()) {
-                    return generatedKeys.getInt(1);
+                    return generatedKeys.getString(1);
                 }
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return -1;
+        return null;
     }
 
-    int insertSavings(int account_id, double minimum_balance, double penalty) {
+    String insertSavings(String account_id, double minimum_balance, double penalty) {
         try {
-            insertSavingsAccount.setInt(1, account_id);
+            insertSavingsAccount.setString(1, account_id);
             insertSavingsAccount.setDouble(2, minimum_balance);
             insertSavingsAccount.setDouble(3, penalty);
-
-            int affectedRows = insertSavingsAccount.executeUpdate();
-            if (affectedRows > 0) {
-                ResultSet generatedKeys = insertSavingsAccount.getGeneratedKeys();
-                if (generatedKeys.next()) {
-                    return generatedKeys.getInt(1);
-                }
-            }
+            insertSavingsAccount.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return -1;
+        return null;
     }
 
 

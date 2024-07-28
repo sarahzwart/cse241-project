@@ -58,7 +58,7 @@ public class AccountRow{
     * Print method for a single account row
     */
     public void printAccountRow() {
-        System.out.printf("| %-10d | %-12s | %-10.2f | %-13.2f |\n",
+        System.out.printf("| %-10s | %-12s | %-10.2f | %-13.2f |\n",
                 account_id, account_type, balance, interest_rate);
     }
     /*
