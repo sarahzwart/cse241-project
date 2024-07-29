@@ -85,7 +85,7 @@ public class CreditRow{
      * Print credit card.
      */
     public void printCreditRow() {
-        System.out.printf("| %-8d | %-15.2f | %-10.2f | %-15.2f | %-12.2f |\n",
+        System.out.printf("| %-8s | %-15.2f | %-10.2f | %-15.2f | %-12.2f |\n",
                 card_id, interest_rate, limit, running_balance, balance_due);
     }
 

@@ -10,6 +10,19 @@ public class Database{
     * be null. Otherwise, there is a valid open connection
     */
     private Connection databaseConnection;
+
+    /**
+     * Purchases
+     */
+    private PreparedStatement selectOneVendorId;
+    private PreparedStatement selectAllVendor;
+    private PreparedStatement showPastPurchasesByCardId;
+    private PreparedStatement addToCreditBalance;
+    /**
+     * Adding a Card
+     */
+    private PreparedStatement selectAllCardByCustomerId;
+
     /**
      * Getting Customer Accounts
      */
@@ -79,6 +92,7 @@ public class Database{
     /**
      * Declarations for Insertions
      */
+    private PreparedStatement insertPurchase;
     private PreparedStatement insertAccount;
     private PreparedStatement insertBranch;
     private PreparedStatement insertCard;
@@ -118,10 +132,25 @@ public class Database{
 
         // Set Up Prepared Statements
 
-        /*UPDATE transaction
-SET amount = amount + 100 -- Increase the amount by 100
-WHERE customer_id = 'C001' */
         try {
+            database.insertPurchase = database.databaseConnection.prepareStatement(
+                "INSERT INTO Purchase (card_id, vendor_id, amount, purchase_date) VALUES (?, ?, ?, ?)"
+            );
+            
+            database.selectOneVendorId = database.databaseConnection.prepareStatement(
+                "SELECT * FROM Vendor WHERE vendor_name = ?"
+            );
+            
+            database.selectAllVendor = database.databaseConnection.prepareStatement(
+                "SELECT * FROM Vendor"
+            );
+            
+            database.showPastPurchasesByCardId = database.databaseConnection.prepareStatement(
+                "SELECT * FROM Purchases WHERE card_id = ?"
+            );
+            database.addToCreditBalance = database.databaseConnection.prepareStatement(
+                "UPDATE Credit SET running_balance = running_balance + ? WHERE card_id = ?"
+            );
             database.addToAccountAmount = database.databaseConnection.prepareStatement(
                 "UPDATE Account SET balance = balance + ? WHERE account_id = ?"
             );
@@ -169,8 +198,11 @@ WHERE customer_id = 'C001' */
             );
             database.selectOneCardByType = database.databaseConnection.prepareStatement(
                 "SELECT * FROM Card WHERE card_type = ? and customer_id = ?"
-            );
+            ); 
 
+            database.selectAllCardByCustomerId = database.databaseConnection.prepareStatement(
+                "SELECT * FROM Card WHERE customer_id = ?"
+            );
 
             // CREDIT
             database.selectAllCredit = database.databaseConnection.prepareStatement(
@@ -237,13 +269,13 @@ WHERE customer_id = 'C001' */
             );
             database.insertLoan = database.databaseConnection.prepareStatement(
                 "INSERT INTO Loan (loan_type, amount, interest_rate, monthly_payment, customer_id) VALUES (?, ?, ?, ?, ?)",
-                Statement.RETURN_GENERATED_KEYS);
+                new String[]{"loan_id"});
             database.insertSavingsAccount = database.databaseConnection.prepareStatement(
                 "INSERT INTO Savings VALUES (?, ?, ?)"
             );
             database.insertTransaction = database.databaseConnection.prepareStatement(
                 "INSERT INTO Transaction (transaction_type, transaction_date, amount, customer_id, account_id, branch_id) VALUES (?,?,?,?,?,?) ", 
-                Statement.RETURN_GENERATED_KEYS);
+                new String[]{"transaction_id"});
 
 
             // Implement Prepared Statements for Deposit/Withdrwal
@@ -274,6 +306,109 @@ WHERE customer_id = 'C001' */
     }
     // account_type, balance, interest_rate
     // insert methods
+
+
+    public ArrayList<CardRow> selectAllCardByCustomerId(String customer_id){
+        ArrayList<CardRow> cards = new ArrayList<CardRow>();
+        try {
+            selectAllCardByCustomerId.setString(1, customer_id);
+            ResultSet rs = selectAllCardByCustomerId.executeQuery();
+            while(rs.next()){
+                String card_id = rs.getString("card_id");
+                String card_type = rs.getString("card_type");
+                String account_id = rs.getString("account_id");
+                String cust_id = rs.getString("customer_id");
+                String customer_name = rs.getString("customer_name");
+                CardRow card = new CardRow(card_id, card_type, account_id, cust_id, customer_name);
+                cards.add(card);
+            }
+            return cards;
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
+        return cards;
+    }
+    public void insertPurchase(String card_id, String vendor_id, double amount, Timestamp purchase_date){
+        try {
+            insertPurchase.setString(1, card_id);
+            insertPurchase.setString(2, vendor_id);
+            insertPurchase.setDouble(3, amount);
+            insertPurchase.setTimestamp(4, purchase_date);
+            insertPurchase.executeUpdate();
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
+        return;
+    }
+    // A00003   checking    2425.89             0
+    public String selectOneVendorId(String vendor_name){
+        try{
+            selectOneVendorId.setString(1, vendor_name);
+            ResultSet rs = selectOneVendorId.executeQuery();
+            if(rs.next()){
+                String vendor_id = rs.getString("vendor_id");
+                return vendor_id;
+            }
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public ArrayList<VendorRow> selectAllVendor(){
+        ArrayList<VendorRow> vendors = new ArrayList<VendorRow>();
+        try {
+            ResultSet rs = selectAllVendor.executeQuery();
+            while(rs.next()){
+                String vendor_name = rs.getString("vendor_name");
+                String vendor_id = rs.getString("vendor_id");
+                VendorRow vendor = new VendorRow(vendor_id, vendor_name);
+                vendors.add(vendor);
+            }
+            return vendors;
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
+        return vendors;
+    }
+
+    public ArrayList<PurchaseRow> showPastPurchasesByCardId(String card_id){
+        ArrayList<PurchaseRow> purchases= new ArrayList<PurchaseRow>();
+        try {
+            showPastPurchasesByCardId.setString(1, card_id);
+            ResultSet rs = showPastPurchasesByCardId.executeQuery();
+            while(rs.next()){
+                int purchase_id = rs.getInt("purchase_id");
+                String cardId = rs.getString("card_id");
+                String vendor_id = rs.getString("vendor_id");
+                double amount = rs.getDouble("amount");
+                Timestamp purchase_date = rs.getTimestamp("purchase_date");
+
+                PurchaseRow purchase = new PurchaseRow(purchase_id, cardId, vendor_id, amount, purchase_date);
+                purchases.add(purchase);
+            }
+            return purchases;
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
+        return purchases;
+    }
+
+    public void addToCreditBalance(double amount, String card_id){
+        try {
+            addToCreditBalance.setDouble(1, amount);
+            addToCreditBalance.setString(2, card_id);
+            int rowsAffected = addToCreditBalance.executeUpdate();
+            if (rowsAffected == 0) {
+                System.out.println("No card found with the provided card_id.");
+            } else {
+                System.out.println("Deposit successful.");
+            }
+        } catch (SQLException e) {
+            System.out.println("Error in addToCreditBalance");
+            e.printStackTrace();
+        }
+    }
 
     public void addToAccountAmount(double deposit_amount, String account_id) {
         try {
@@ -485,6 +620,26 @@ WHERE customer_id = 'C001' */
         return account;
     }// Branch
 
+    ArrayList<Customer> selectAllCustomer(){
+        ArrayList<Customer> customers = new ArrayList<Customer>();
+        try{
+            ResultSet rs = selectAllCustomer.executeQuery();
+            while (rs.next()){
+                String customer_name = rs.getString("customer_name");
+                String customer_id = rs.getString("customer_id");
+                Date date = rs.getDate("birthday");
+                String address = rs.getString("address");
+                Customer customer = new Customer(customer_id, customer_name, date, address);
+                customers.add(customer);
+            }
+            return customers;
+        } catch (SQLException e){
+            System.out.println("Error in selectAllCustomer");
+            e.printStackTrace();
+        }
+        return customers;
+    }
+
     BranchRow selectOneBranch(String branch_id) {
         BranchRow branch = null;
         try {
@@ -557,7 +712,6 @@ WHERE customer_id = 'C001' */
     public double balance_due;
      */
     CreditRow selectOneCredit(String card_id) {
-        CreditRow credit = null;
         try {
             selectOneCredit.setString(1, card_id);
             ResultSet rs = selectOneCredit.executeQuery();
@@ -567,13 +721,14 @@ WHERE customer_id = 'C001' */
                 double limit = rs.getDouble("limit");
                 double running_balance = rs.getDouble("running_balance");
                 double balance_due = rs.getDouble("balance_due");
-                credit = new CreditRow(crd_id, int_rate, limit, running_balance, balance_due);
+                CreditRow credit = new CreditRow(crd_id, int_rate, limit, running_balance, balance_due);
+                return credit;
             }
         } catch (SQLException e) {
             System.out.println("Error in selectOneCredit");
             e.printStackTrace();
         }
-        return credit;
+        return null;
     }
 
     // Customer

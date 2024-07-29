@@ -60,7 +60,7 @@ public class CardRow{
      * Prints the card details in a formatted manner.
      */
     public void printCardRow() {
-        System.out.printf("| %-8d | %-12s | %-8d | %-8d | %-20s |\n", 
+        System.out.printf("| %-8s | %-12s | %-8s | %-8s | %-20s |\n", 
                           card_id, card_type, account_id, customer_id, customer_name);
     }
 

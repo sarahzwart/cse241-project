@@ -78,7 +78,7 @@ public class Customer{
      * Print customer.
      */
     public void printCustomer() {
-        System.out.printf("| %-10d | %-20s | %-10s | %-30s |\n",
+        System.out.printf("| %-10s | %-20s | %-10s | %-30s |\n",
                 customer_id, customer_name, birthday, address);
     }
 

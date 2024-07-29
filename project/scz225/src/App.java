@@ -106,11 +106,11 @@ public class App {
 
     static char purchaseMenu(BufferedReader in){
         System.out.println("\nMake a Purchase:");
-        System.out.println(" [D] Use Debit:");
-        System.out.println(" [C] Use Credit:");
+        System.out.println(" [V] View Credit/Debit Info");
+        System.out.println(" [P] Make Purchase");
         System.out.println(" [Q] Quit");
 
-        String actions = "D C Q";
+        String actions = "V P Q";
         while (true) {
             System.out.print("[" + actions + "] :> ");
             String action;
@@ -191,7 +191,7 @@ public class App {
             return;
         }
         db.addToAccountAmount(amount, account_id);
-        db.insertTransaction("withdrawal", transactionDate, amount, customer_id, account_id, branch_chosen);
+        db.insertTransaction("deposit", transactionDate, amount, customer_id, account_id, branch_chosen);
         System.out.println("Deposit made successfully! ");
     }
 
@@ -238,8 +238,7 @@ public class App {
                     return;
                 }
             }
-        }
-        else {
+        } else {
             while(true){
                 String amount_input = getString(in, "\nEnter how much you would like to withdraw :> ");
                 double amount = 0.00;
@@ -255,6 +254,7 @@ public class App {
                     continue;
                 } else {
                     db.subtractFromAccountAmount(amount, account_id);
+                    db.insertTransaction("withdrawal", transactionDate, amount, customer_id, account_id, branch_chosen);
                     System.out.println("Withdrawal made successfully!");
                     return;
                 }
@@ -330,13 +330,161 @@ public class App {
             }
         }
     }
+
+    public static void purchaseChoice(BufferedReader in, Database db, String customer_id, String customer_name){
+        while(true){
+            char purchaseAction = purchaseMenu(in);
+            switch(purchaseAction){
+                case 'V':
+                    showCardInformation(db, customer_name, customer_id);
+                    continue;
+                case 'P':
+                    String vendorId = showAllVendors(db, in);
+                    purchase(in, db, customer_id, customer_name, vendorId);
+                    continue;
+                case 'Q':
+                    return;
+                default:
+                    continue;
+            }
+        }
+
+        
+        
+    }
+
+    public static void useCredit(BufferedReader in, Database db, String card_id, String vendor_id){
+        double amount = 0.00;
+        Timestamp purchaseDate = new Timestamp(System.currentTimeMillis()); 
+        CreditRow credit_info = db.selectOneCredit(card_id); 
+        double limit = credit_info.getLimit();
+        double balance = credit_info.getRunningBalance();
+        double amount_left = limit - balance;
+        while(true){
+            String amount_input = getString(in, "\nEnter how much your purchase is :> ");
+            try {
+                amount = Double.parseDouble(amount_input);
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid amount. Please enter a valid number.");
+                return;
+            }
+
+            if(amount > amount_left){
+                System.out.println("The expense is too high for this account.");
+                System.out.println("Please purchase something else.");
+                continue;
+            } 
+            else {
+                db.addToCreditBalance(amount, card_id);
+                db.insertPurchase(card_id, vendor_id, amount, purchaseDate);
+                System.out.println("Purchase made successfully");
+                return;
+            }
+
+        }
+    }
+
+    public static void useDebit(BufferedReader in, Database db, String vendor_id, String card_id, String account_id){
+        AccountRow account_info = db.selectOneAccount(account_id);
+        double account_bal = account_info.getBalance(); 
+        double amount = 0.00;
+        Timestamp purchaseDate = new Timestamp(System.currentTimeMillis()); 
+        while(true){
+            String amount_input = getString(in, "\nEnter how much your purchase is :> ");
+            try {
+                amount = Double.parseDouble(amount_input);
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid amount. Please enter a valid number.");
+                return;
+            }
+            if(account_bal - amount <= 0){
+                System.out.println("The expense is too high for this account");
+                System.out.println("Please buy something else");
+                continue;
+            } else {
+                db.subtractFromAccountAmount(amount, account_id);
+                db.insertPurchase(card_id, vendor_id, amount, purchaseDate);
+                System.out.println("Purchase made successfully!");
+                return;
+            }
+        }
+    }
+
+    public static void purchase(BufferedReader in, Database db, String customer_id, String customer_name, String vendor_id){
+        showCardInformation(db, customer_name, customer_id);
+        String card_type = "";
+        while(true){
+            String card_id = getString(in, "Please enter the ID of the Card you want to use :>");
+            CardRow card = db.selectOneCard(card_id);
+            String account_id = card.getAccountId();
+            card_type = card.getCardType();
+            if(card_type.equalsIgnoreCase("credit")){
+                useCredit(in, db, card_id, vendor_id);
+                break;
+            }
+            if(card_type.equalsIgnoreCase("debit")){
+                useDebit(in, db, vendor_id, card_id, account_id);
+                break;
+            }
+            else {
+                System.out.println("Please enter a valid ID. ");
+            }
+        }
+        
+    }
+
+    public static void showCardInformation(Database db, String customer_name, String customer_id){
+        System.out.println(" ");
+        System.out.println("**Showing all cards of " + customer_name + "**");
+        ArrayList<CardRow> cards = db.selectAllCardByCustomerId(customer_id);
+        CardRow.printCardRows(cards);
+        ArrayList<CreditRow> creditCard = new ArrayList<CreditRow>();
+        for(CardRow card : cards){
+            if(card.getCardType().equalsIgnoreCase("credit")){
+                creditCard.add(db.selectOneCredit(card.getCardId()));
+            }
+        }
+        System.out.println(" ");
+        System.out.println("**Showing all credit card info**");
+        CreditRow.printCredits(creditCard);
+    }
+
+    public static String showAllVendors(Database db, BufferedReader in){
+        System.out.println("**Showing all vendors**");
+        ArrayList<VendorRow> vendors = db.selectAllVendor();
+        VendorRow.printVendors(vendors);
+        String store = "";
+        boolean validVendor = false;
+        // Checking that the Vendor is in the list
+        while (!validVendor) {
+            // Prompt user for the vendor name
+            store = getString(in, "\nPlease enter the name of the vendor you shopped at: ");
+            
+            // Validate the entered vendor name
+            validVendor = false;
+            for (VendorRow vendor : vendors) {
+                if (vendor.getVendorName().equalsIgnoreCase(store)) {
+                    validVendor = true;
+                    break;
+                }
+            }
+
+            if (!validVendor) {
+                System.out.println("Error: Vendor '" + store + "' not found. Please enter a valid vendor name.");
+            }
+        }
+       return db.selectOneVendorId(store);
+    }
+
+
+
     
     public static void main(String[] args) {
         // USER LOGIN
-        BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
-        String user = getString(in, "\nPlease enter the user you would like to login as: ");
+        BufferedReader in = new BufferedReader(new InputStreamReader(System.in));   
         String password = getString(in, "\nPlease enter password: ");
         Database db = new Database();
+        boolean validUser = false;
         try {
             db = getConnection(in, password);
         } catch (URISyntaxException e) {
@@ -345,6 +493,21 @@ public class App {
         }
         System.out.println("Connection Successful");
         // USER LOGIN ^^^
+        ArrayList<Customer> customers = db.selectAllCustomer();
+        Customer.printCustomers(customers);
+        String user = "";
+        while (!validUser) {
+            user = getString(in, "\nPlease enter the user you would like to login as from the list above :> ");
+            for (Customer c : customers) {
+                if (user.equalsIgnoreCase(c.getCustomerName())) {
+                    validUser = true;
+                    break;
+                }
+            }
+            if (!validUser) {
+                System.out.println("Error: User '" + user + "' not found. Please enter a valid user");
+            }
+        }
 
         // GET USER INFO
         Customer customer = db.selectOneCustomerByName(user);
@@ -371,6 +534,7 @@ public class App {
                     continue;
                 case 'P':
                     System.out.println("\n**Make a Purchase**");
+                    purchaseChoice(in, db, customer_id, user);
                     continue;
                 case 'Q':
                     db.disconnect();
