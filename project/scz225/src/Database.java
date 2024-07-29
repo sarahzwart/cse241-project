@@ -503,6 +503,21 @@ WHERE customer_id = 'C001' */
         return branch;
     }
 
+    ArrayList<BranchRow> selectAllBranch(){
+        ArrayList<BranchRow> branches = new ArrayList<BranchRow>();
+        try {
+            ResultSet rs = selectAllBranch.executeQuery();
+            while (rs.next()) {
+                branches.add(new BranchRow(rs.getString("branch_id"), rs.getString("branch_type")));
+            }
+            rs.close();
+        } catch (SQLException e) {
+            System.out.println("Error in selectAllBranch");
+            e.printStackTrace();
+        }
+        return branches;
+    }
+
     // Card
     /*
      *     

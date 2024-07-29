@@ -33,7 +33,7 @@ public class BranchRow{
      * Prints the branch details in a formatted manner.
      */
     public void printBranchRow() {
-        System.out.printf("| %-10d | %-12s |\n", 
+        System.out.printf("| %-10s | %-12s |\n", 
                           branch_id, branch_type);
     }
 
@@ -46,6 +46,17 @@ public class BranchRow{
         System.out.println("----------------------------");
         for (BranchRow branchRow : branchRows) {
             branchRow.printBranchRow();
+        }
+    }
+
+    public static void printBranchRowsFullService(ArrayList<BranchRow> branchRows) {
+        System.out.printf("| %-10s | %-12s |\n", 
+                          "Branch ID", "Branch Type");
+        System.out.println("----------------------------");
+        for (BranchRow branchRow : branchRows) {
+            if(branchRow.branch_type.equals("Full Service")){
+                branchRow.printBranchRow();
+            }
         }
     }
 }

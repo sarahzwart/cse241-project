@@ -163,10 +163,10 @@ public class App {
                     AccountRow.printAccounts(accounts);
                     continue;
                 case 'D':
-                    depositAction(in, db);
+                    depositAction(in, db, customer_id);
                     continue;
                 case 'W':
-                    withdrawalAction(in, db);
+                    withdrawalAction(in, db, customer_id);
                     continue;
                 case 'Q':
                     return;
@@ -176,10 +176,14 @@ public class App {
         }
     }
 
-    public static void depositAction(BufferedReader in, Database db){
+    public static void depositAction(BufferedReader in, Database db, String customer_id){
+        ArrayList<BranchRow> branches = db.selectAllBranch();
+        BranchRow.printBranchRowsFullService(branches);
+        String branch_chosen = getString(in, "\nPlease enter the branch you wish to use :> ");
         String account_id = getString(in, "\nPlease enter the account_id in which you would like to make a deposit :> ");
         String amount_input = getString(in, "\nEnter how much you would like to deposit :> ");
         double amount = 0.00;
+        Timestamp transactionDate = new Timestamp(System.currentTimeMillis()); 
         try {
             amount = Double.parseDouble(amount_input);
         } catch (NumberFormatException e) {
@@ -187,14 +191,19 @@ public class App {
             return;
         }
         db.addToAccountAmount(amount, account_id);
+        db.insertTransaction("withdrawal", transactionDate, amount, customer_id, account_id, branch_chosen);
         System.out.println("Deposit made successfully! ");
     }
 
-    public static void withdrawalAction(BufferedReader in, Database db){
+    public static void withdrawalAction(BufferedReader in, Database db, String customer_id){
+        ArrayList<BranchRow> branches = db.selectAllBranch();
+        BranchRow.printBranchRows(branches);
+        String branch_chosen = getString(in, "\nPlease enter the branch you wish to use :> ");
         String account_id = getString(in, "\nPlease enter the account_id in which you would like to make a withdrawal :> ");
         AccountRow account_info = db.selectOneAccount(account_id);
         String account_type = account_info.getAccountType();
         double account_bal = account_info.getBalance();
+        Timestamp transactionDate = new Timestamp(System.currentTimeMillis()); 
         if(account_type.equals("savings")){
             Double minimum_bal = db.getMinimumBalance(account_id);
             while(true){
@@ -212,7 +221,8 @@ public class App {
                     String decision = getString(in, "YES or NO :> ").trim().toLowerCase();
                     if(decision.equals("yes")){
                         db.subtractFromAccountAmount((amount-50.00), account_id);
-                        System.out.println("Withdrawal made successfully!");
+                        System.out.println("Withdrawal made successfully! ");
+                        System.out.println("Penalty applied to account. ");
                         return;
                     }
                     continue;
@@ -223,6 +233,7 @@ public class App {
                 }
                 else{
                     db.subtractFromAccountAmount(amount, account_id);
+                    db.insertTransaction("withdrawal", transactionDate, amount, customer_id, account_id, branch_chosen);
                     System.out.println("Withdrawal made successfully!");
                     return;
                 }
@@ -344,7 +355,7 @@ public class App {
             char menuAction = mainPromptMenu(in);
             switch (menuAction) {
                 case 'D':
-                    System.out.println("\n**Account Deposits and Withdrawal");
+                    System.out.println("\n**Account Deposits and Withdrawal**");
                     depositWithdrawalChoice(in, db, customer_id, user);
                     continue;
                 case 'A':
@@ -352,10 +363,14 @@ public class App {
                     accountAction(in, db, customer_id, user);
                     continue;
                 case 'C':
+                    System.out.println("\n**Obtain New Debit/Credit Card**");
+                    // debitCreditAction()
                     continue;
                 case 'L':
+                    System.out.println("\n**Take out a Loan**");
                     continue;
                 case 'P':
+                    System.out.println("\n**Make a Purchase**");
                     continue;
                 case 'Q':
                     db.disconnect();
