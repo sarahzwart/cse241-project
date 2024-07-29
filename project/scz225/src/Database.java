@@ -712,7 +712,8 @@ public class Database{
     public double balance_due;
      */
     CreditRow selectOneCredit(String card_id) {
-        try {
+        CreditRow credit = null;
+        try{
             selectOneCredit.setString(1, card_id);
             ResultSet rs = selectOneCredit.executeQuery();
             if (rs.next()) {
@@ -721,14 +722,15 @@ public class Database{
                 double limit = rs.getDouble("limit");
                 double running_balance = rs.getDouble("running_balance");
                 double balance_due = rs.getDouble("balance_due");
-                CreditRow credit = new CreditRow(crd_id, int_rate, limit, running_balance, balance_due);
-                return credit;
+                credit = new CreditRow(crd_id, int_rate, limit, running_balance, balance_due);
+            } else {
+                System.out.println("No credit information found for card ID: " + card_id);
             }
         } catch (SQLException e) {
             System.out.println("Error in selectOneCredit");
             e.printStackTrace();
         }
-        return null;
+        return credit;
     }
 
     // Customer

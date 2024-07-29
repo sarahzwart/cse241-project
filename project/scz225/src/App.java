@@ -27,7 +27,7 @@ public class App {
     static char mainPromptMenu(BufferedReader in){
         System.out.println("\nMain Menu: ");
         System.out.println(" [D] Account Deposit/Withdrawal");
-        System.out.println(" [A] View or Open Account(s)");
+        System.out.println(" [A] View Account Information or Open Account(s)");
         System.out.println(" [C] Obtain New Debit/Credit Card");
         System.out.println(" [L] Take Out a Loan");
         System.out.println(" [P] Purchases Using a Card");
@@ -178,17 +178,49 @@ public class App {
 
     public static void depositAction(BufferedReader in, Database db, String customer_id){
         ArrayList<BranchRow> branches = db.selectAllBranch();
+        ArrayList<AccountRow> accounts = db.getAccountByCustomer(customer_id);
         BranchRow.printBranchRowsFullService(branches);
-        String branch_chosen = getString(in, "\nPlease enter the branch you wish to use :> ");
-        String account_id = getString(in, "\nPlease enter the account_id in which you would like to make a deposit :> ");
-        String amount_input = getString(in, "\nEnter how much you would like to deposit :> ");
+        // Loop for Branches
+        boolean validBranch = false;
+        String branch_chosen = "";
+        while (!validBranch) {
+            branch_chosen = getString(in, "\nPlease enter the branch you wish to use :> ");
+            for (BranchRow b: branches) {
+                if (branch_chosen.equalsIgnoreCase(b.getBranchId())) {
+                    validBranch = true;
+                    break;
+                }
+            }
+            if (!validBranch) {
+                System.out.println("Error: Branch'" + branch_chosen + "' not found. Please enter a valid branch ID");
+            }
+        }
+        // Loop for Account ID
+        String account_id = "";
+        boolean validAccount = false;
+        while (!validAccount) {
+            account_id = getString(in, "\nPlease enter the account_id in which you would like to make a deposit :> ");
+            for (AccountRow a: accounts) {
+                if (account_id.equalsIgnoreCase(a.getAccountID())) {
+                    validAccount = true;
+                    break;
+                }
+            }
+            if (!validAccount) {
+                System.out.println("Error: Acccount'" + account_id + "' not found. Please enter a valid Account ID");
+            }
+        }
         double amount = 0.00;
         Timestamp transactionDate = new Timestamp(System.currentTimeMillis()); 
-        try {
-            amount = Double.parseDouble(amount_input);
-        } catch (NumberFormatException e) {
-            System.out.println("Invalid balance amount. Please enter a valid number.");
-            return;
+        while(true){    
+            String amount_input = getString(in, "\nEnter how much you would like to deposit :> ");
+            try {
+                amount = Double.parseDouble(amount_input);
+                break;
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid balance amount. Please enter a valid number.");
+                continue;
+            }   
         }
         db.addToAccountAmount(amount, account_id);
         db.insertTransaction("deposit", transactionDate, amount, customer_id, account_id, branch_chosen);
@@ -275,14 +307,28 @@ public class App {
                     AccountRow.printAccounts(accounts);
                     continue;
                 case 'C':
-                    String accountType = getString(in,"Would you like a Savings or Checking Account? :> ").trim().toLowerCase();
-                    String accountAmountInput = getString(in,"What would you like the balance to be? :> ");
+                    String accountType = "";
+                    //Check that using entered checking or saving
+                    while(true){
+                        accountType = getString(in,"Would you like a Savings or Checking Account? :> ").trim().toLowerCase();
+                        if(accountType.equals("savings") ||accountType.equals("checking") ){
+                            break;
+                        }
+                        else{
+                            continue;
+                        }
+                    }
+                    String accountAmountInput = "";
                     double accountAmount = 0.00;
-                    try {
-                        accountAmount = Double.parseDouble(accountAmountInput);
-                    } catch (NumberFormatException e) {
-                        System.out.println("Invalid balance amount. Please enter a valid number.");
-                        return;
+                    while(true){
+                        accountAmountInput = getString(in,"What would you like the balance to be? :> ");
+                        try {
+                            accountAmount = Double.parseDouble(accountAmountInput);
+                            break;
+                        } catch (NumberFormatException e) {
+                            System.out.println("Invalid balance amount. Please enter a valid number.");
+                            continue;
+                        }
                     }
                     String accountId = null;
                     if (accountType.equals("savings")) {
@@ -438,12 +484,19 @@ public class App {
         System.out.println("**Showing all cards of " + customer_name + "**");
         ArrayList<CardRow> cards = db.selectAllCardByCustomerId(customer_id);
         CardRow.printCardRows(cards);
+        
         ArrayList<CreditRow> creditCard = new ArrayList<CreditRow>();
-        for(CardRow card : cards){
-            if(card.getCardType().equalsIgnoreCase("credit")){
-                creditCard.add(db.selectOneCredit(card.getCardId()));
+        for (CardRow card : cards) {
+            if (card.getCardType().equalsIgnoreCase("credit")) {
+                CreditRow credit = db.selectOneCredit(card.getCardId());
+                if (credit == null) {
+                    System.out.println("No credit information found for card ID: " + card.getCardId());
+                } else {
+                    creditCard.add(credit);
+                }
             }
         }
+
         System.out.println(" ");
         System.out.println("**Showing all credit card info**");
         CreditRow.printCredits(creditCard);
