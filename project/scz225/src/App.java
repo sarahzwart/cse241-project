@@ -363,18 +363,70 @@ public class App {
     
     }
     
-    public static void debitOrCreditChoice(BufferedReader in, Database db){
+    public static void debitOrCreditChoice(BufferedReader in, Database db, String customer_id, String customer_name){
         while(true){
             char tableChoice = debitOrCreditMenu(in);
             switch (tableChoice) {
                 case 'D':
+                    createDebit(in, db, customer_id, customer_name);
+                    continue;
                 case 'C':
+                    createCredit(in, db, customer_id, customer_name);
+                    continue;
                 case 'Q':
                     return;
                 default:
                     continue;
             }
         }
+    }
+
+    public static void createDebit(BufferedReader in, Database db, String customer_id, String customer_name){
+        String account_id = "";
+        ArrayList<AccountRow> accounts = db.getAccountByCustomer(customer_id);
+        System.out.println("** Showing all accounts of customer " + customer_name + " **");
+        System.out.printf("| %-10s | %-12s | %-10s | %-13s |\n",
+                "Account ID", "Account Type", "Balance", "Interest Rate");
+        System.out.println("---------------------------------------------------------");
+        for(AccountRow a: accounts){
+            if(a.getAccountType().equalsIgnoreCase("checking")){
+                AccountRow.printAccount(a);
+            }
+        }
+        boolean validAccount = false;
+        while (!validAccount) {
+            account_id = getString(in, "\nChoose a checking account ID to connect to your debit card :> ");
+            for (AccountRow a : accounts) {
+                if (a.getAccountID().equalsIgnoreCase(account_id)) {
+                    validAccount = true;  
+                    break;
+                }
+            }
+
+            if (!validAccount) {
+                System.out.println("Invalid account ID. Please choose a valid checking account.");
+            }
+        }
+        db.insertNewDebitCard(account_id, customer_id, customer_name);
+
+    }
+
+    public static void createCredit(BufferedReader in, Database db, String customer_id, String customer_name){
+        double amount = 0;
+        while(true){    
+            String amount_input = getString(in, "\nWhat would you like the credit limit to be :> ");
+            try {
+                amount = Double.parseDouble(amount_input);
+                break;
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid amount. Please enter a valid number.");
+                continue;
+            }   
+        }
+        db.insertNewCreditCard(customer_id, customer_name, amount);
+
+
+
     }
 
     public static void purchaseChoice(BufferedReader in, Database db, String customer_id, String customer_name){
@@ -580,7 +632,7 @@ public class App {
                     continue;
                 case 'C':
                     System.out.println("\n**Obtain New Debit/Credit Card**");
-                    // debitCreditAction()
+                    debitOrCreditChoice(in, db, customer_id, user);
                     continue;
                 case 'L':
                     System.out.println("\n**Take out a Loan**");

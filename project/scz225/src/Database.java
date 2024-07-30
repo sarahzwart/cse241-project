@@ -22,7 +22,9 @@ public class Database{
      * Adding a Card
      */
     private PreparedStatement selectAllCardByCustomerId;
-
+    private PreparedStatement insertCardTypeCredit;
+    private PreparedStatement insertCardTypeDebit;
+    private PreparedStatement insertDebit;
     /**
      * Getting Customer Accounts
      */
@@ -255,12 +257,22 @@ public class Database{
             database.insertAccount = database.databaseConnection.prepareStatement(
                 "INSERT INTO Account(account_type, balance, interest_rate) VALUES (?, ?, ?)", 
                 new String[]{"account_id"});
-            /*database.insertCard = database.databaseConnection.prepareStatement(
-                //NEED TO INCREMENT
-            ;
+            
+            database.insertCardTypeCredit = database.databaseConnection.prepareStatement(
+                "INSERT INTO Card(card_type, customer_id, customer_name) VALUES ('credit', ?, ?)",
+                new String[]{"card_id"}
+            );
+            database.insertCardTypeDebit= database.databaseConnection.prepareStatement(
+                "INSERT INTO Card(card_type, account_id, customer_id, customer_name) VALUES ('debit', ?, ?, ?)",
+                new String[]{"card_id"}
+            );
+
             database.insertCreditCard = database.databaseConnection.prepareStatement(
-                //NEED TO INCREMENT
-            );*/
+                "INSERT INTO Credit(card_id, interest_rate, limit, running_balance, balance_due) VALUES (?, 18.0, ?, 0, 0)"
+            );
+            database.insertDebit = database.databaseConnection.prepareStatement(
+                "INSERT INTO Debit(card_id) VALUES (?)"
+            );
             database.insertOwnership = database.databaseConnection.prepareStatement(
                 "INSERT INTO Account_Ownership (account_id, customer_id) VALUES (?, ?)"
             );
@@ -306,7 +318,54 @@ public class Database{
     }
     // account_type, balance, interest_rate
     // insert methods
-
+    public void insertNewCreditCard(String customer_id, String customer_name, double limit) {
+        try {
+            // Insert into Card table
+            insertCardTypeCredit.setString(1, customer_id);
+            insertCardTypeCredit.setString(2, customer_name);
+            insertCardTypeCredit.executeUpdate();
+    
+            // Retrieve the generated card_id
+            ResultSet rs = insertCardTypeCredit.getGeneratedKeys();
+            if (rs.next()) {
+                String newCardId = rs.getString(1);
+                insertCreditCard.setString(1, newCardId);
+                insertCreditCard.setDouble(2, limit);
+                insertCreditCard.executeUpdate();
+            } else {
+                System.out.println("Failed to retrieve generated card_id.");
+            }
+        } catch (SQLException e) {
+            System.out.println("Error in insertNewCreditCard");
+            e.printStackTrace();
+        }
+    }
+    public void insertNewDebitCard(String account_id, String customer_id, String customer_name) {
+        try {
+            // Insert into Card table
+            insertCardTypeDebit.setString(1, account_id);
+            insertCardTypeDebit.setString(2, customer_id);
+            insertCardTypeDebit.setString(3, customer_name);
+            insertCardTypeDebit.executeUpdate();
+    
+            // Retrieve the generated card_id
+            ResultSet rs = insertCardTypeDebit.getGeneratedKeys();
+            if (rs.next()) {
+                String newCardId = rs.getString(1);
+    
+                // Insert into Debit table
+                insertDebit.setString(1, newCardId);
+                insertDebit.executeUpdate();
+            } else {
+                System.out.println("Failed to retrieve generated card_id.");
+            }
+        } catch (SQLException e) {
+            System.out.println("Error in insertNewDebitCard");
+            e.printStackTrace();
+        }
+    }
+    
+    
 
     public ArrayList<CardRow> selectAllCardByCustomerId(String customer_id){
         ArrayList<CardRow> cards = new ArrayList<CardRow>();

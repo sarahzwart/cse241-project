@@ -72,4 +72,9 @@ public class AccountRow{
             account.printAccountRow();
         }
     }
+
+    public static void printAccount(AccountRow account) {
+        // Print the header for better readability
+        account.printAccountRow();
+    }
 }
