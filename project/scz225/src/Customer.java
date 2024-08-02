@@ -93,4 +93,19 @@ public class Customer{
             customer.printCustomer();
         }
     }
+
+    public void printCustomerName() {
+        System.out.printf("| %-20s |\n", customer_name);
+    }
+
+    /**
+     * Print all customer names.
+     */
+    public static void printCustomerNames(ArrayList<Customer> customers) {
+        System.out.printf("| %-20s |\n", "Customer Name");
+        System.out.println("----------------------");
+        for (Customer customer : customers) {
+            customer.printCustomerName();
+        }
+    }
 }

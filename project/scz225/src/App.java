@@ -9,9 +9,11 @@ import java.util.List;
 import java.io.BufferedReader;
 
 public class App {
+
     private static Database getConnection(BufferedReader in, String password) throws URISyntaxException{
         return Database.getDatabase("scz225", password);
     }
+
     static String getString(BufferedReader in, String message) {
         String s;
         try {
@@ -22,8 +24,57 @@ public class App {
           return "";
         }
         return s;
-      }
-    
+    }
+    static char employeePromptMenu(BufferedReader in){
+        System.out.println("\nEmployee actions: ");
+        System.out.println(" [C] View all customers");
+        System.out.println(" [D] View all cards");
+        System.out.println(" [A] View all accounts");
+        System.out.println(" [T] View all transactions");
+        System.out.println(" [L] View all loans");
+        System.out.println(" [Q] Quit");
+        String actions = "C A T L Q"
+        while(true){
+            System.out.print("[" + actions + "] :> ");
+            String action;
+            try {
+                action = in.readLine();
+            } catch (IOException e) {
+                e.printStackTrace();
+                continue;
+            }
+            if (action.length() != 1)
+                continue;
+            if (actions.contains(action)) {
+                return action.charAt(0);
+            }
+            System.out.println("Invalid Command");
+        }
+    }
+    static char userOrEmployeePromptMenu(BufferedReader in){
+        System.out.println("\nEmployee or User: ");
+        System.out.println(" [E] Employee Login");
+        System.out.println(" [U] User Login");
+        System.out.println(" [Q] Quit");
+        String actions = "E U Q"
+        while(true){
+            System.out.print("[" + actions + "] :> ");
+            String action;
+            try {
+                action = in.readLine();
+            } catch (IOException e) {
+                e.printStackTrace();
+                continue;
+            }
+            if (action.length() != 1)
+                continue;
+            if (actions.contains(action)) {
+                return action.charAt(0);
+            }
+            System.out.println("Invalid Command");
+        }
+    }
+
     static char mainPromptMenu(BufferedReader in){
         System.out.println("\nMain Menu: ");
         System.out.println(" [D] Account Deposit/Withdrawal");
@@ -80,7 +131,7 @@ public class App {
     }
 
     static char debitOrCreditMenu(BufferedReader in){
-        System.out.println("\nOpen a Credit or Debit Card");
+        System.out.println("\nOpen a Credit or Debit Card:");
         System.out.println(" [C] Open a Credit Card");
         System.out.println(" [D] Open a Debit Card");
         System.out.println(" [Q] Quit");
@@ -175,7 +226,44 @@ public class App {
             }
         }
     }
-
+    public static void handleEmployeeActions(Database db, BufferedReader in) {
+    while (true) {
+        char action = employeePromptMenu(in);
+        switch (action) {
+            case 'C':
+                // View all customers
+                ArrayList<Customer> customers = db.getAllCustomer();
+                Customer.printCustomers(customers);
+                break;
+            case 'A':
+                // View all accounts
+                ArrayList<AccountRow> accounts = db.getAllAccount();
+                AccountRow.printAccounts(accounts);
+                break;
+            case 'T':
+                // View all transactions
+                ArrayList<TransactionRow> transactions = db.getAllTransaction();
+                TransactionRow.printTransactions(transactions);
+                break;
+            case 'D':
+                // View all cards
+                ArrayList<CardRow> cards = db.getAllCard();
+                CardRow.printCardRows(cards);
+                break;
+            case 'L':
+                // View all loans (assuming you have a method for this)
+                ArrayList<LoanRow> loans = db.getAllLoan();
+                LoanRow.printLoans(loans);
+                break;
+            case 'Q':
+                System.out.println("Quitting Employee Actions...");
+                return; // Exit the method
+            default:
+                System.out.println("Invalid action. Please try again.");
+                break;
+        }
+    }
+}
     public static void depositAction(BufferedReader in, Database db, String customer_id){
         ArrayList<BranchRow> branches = db.selectAllBranch();
         ArrayList<AccountRow> accounts = db.getAccountByCustomer(customer_id);
@@ -598,8 +686,24 @@ public class App {
         }
         System.out.println("Connection Successful");
         // USER LOGIN ^^^
+
+        char loginAction = userOrEmployeePromptMenu(in);
+        while(true){
+            switch(loginAction){
+                case 'E':
+
+                case 'U':
+                    break;
+                case 'Q':
+                    db.disconnect();
+                    System.out.println("\nDisconnecting from Bank Database... BYE!");
+                    return;
+            }
+        }
+
+        System.out.println("Showing list of customer names to choose from: ");
         ArrayList<Customer> customers = db.selectAllCustomer();
-        Customer.printCustomers(customers);
+        Customer.printCustomerNames(customers);
         String user = "";
         while (!validUser) {
             user = getString(in, "\nPlease enter the user you would like to login as from the list above :> ");
