@@ -181,8 +181,8 @@ public class App {
 
     static char accountMenu(BufferedReader in){
         System.out.println("\nAccount Menu:");
-        System.out.println(" [V] View my Account(s): ");
-        System.out.println(" [C] Create new Account: ");
+        System.out.println(" [V] View my Account(s)");
+        System.out.println(" [C] Create new Account");
         System.out.println(" [Q] Quit");
         String actions = "V C Q";
         while (true) {
@@ -205,10 +205,10 @@ public class App {
 
     static char loanMenu(BufferedReader in){
         System.out.println("\nLoan Menu:");
-        System.out.println(" [V] View my Loan(s): ");
-        System.out.println(" [T] Take out a Loan: ");
-        System.out.println(" [P] Pay my Loan(s): ");
-        System.out.println(" [Q] Quit: ");
+        System.out.println(" [V] View my Loan(s) ");
+        System.out.println(" [T] Take out a Loan ");
+        System.out.println(" [P] Pay my Loan(s) ");
+        System.out.println(" [Q] Quit ");
         String actions = "V T P Q";
         while (true) {
             System.out.print("[" + actions + "] :> ");
@@ -258,7 +258,7 @@ public class App {
         double amount = 0.00;
         String loanType = "";
         while(true){
-            loanType = getString(in, "\nWould you like a secured or unsecured loan :>");
+            loanType = getString(in, "\nWould you like a secured or unsecured loan :> ");
             if(loanType.equalsIgnoreCase("unsecured") || loanType.equalsIgnoreCase("secured")){
                 break;
             }
@@ -268,7 +268,7 @@ public class App {
             }
         }
         while(true){
-            String loanAmount = getString(in, "\n How much would you like your loan to be :>");
+            String loanAmount = getString(in, "\n How much would you like your loan to be :> ");
             try {
                 amount = Double.parseDouble(loanAmount);
                 break;
@@ -343,7 +343,7 @@ public class App {
             }
         }
         while(true){
-            String loanPayment = getString(in, "\n How much would you like to pay :>");
+            String loanPayment = getString(in, "\n How much would you like to pay :> ");
             try {
                 payment = Double.parseDouble(loanPayment);
                 break;
@@ -354,6 +354,7 @@ public class App {
         }
         db.subtractFromLoan(loan_chosen, payment);
         db.subtractFromAccountAmount(payment, account_chosen);
+        
     }
 
     public static void depositWithdrawalChoice(BufferedReader in, Database db, String customer_id, String customer_name){
@@ -609,6 +610,7 @@ public class App {
                        
                     } else if (accountType.equals("checking")) {
                         accountId = db.insertAccount("checking", accountAmount, 0);
+                        db.insertChecking(accountId);
                     } else {
                         System.out.println("Invalid account type. Please enter either 'savings' or 'checking'.");
                         return;
@@ -767,8 +769,15 @@ public class App {
     public static void purchase(BufferedReader in, Database db, String customer_id, String customer_name, String vendor_id){
         showCardInformation(db, customer_name, customer_id);
         String card_type = "";
+        ArrayList<CardRow> cards = db.selectAllCardByCustomerId(customer_id);
+        String card_id = "";
         while(true){
-            String card_id = getString(in, "Please enter the ID of the Card you want to use :>");
+            for (CardRow card : cards) {
+                card_id = getString(in, "Please enter the ID of the Card you want to use :> ");
+                if (card.getCardId().equalsIgnoreCase(card_id)){
+                    break;
+                }
+            }
             CardRow card = db.selectOneCard(card_id);
             String account_id = card.getAccountId();
             card_type = card.getCardType();
@@ -789,7 +798,7 @@ public class App {
 
     public static void showCardInformation(Database db, String customer_name, String customer_id){
         System.out.println(" ");
-        System.out.println("**Showing all cards of " + customer_name + "**");
+        System.out.println("** Showing all cards of " + customer_name + " **");
         ArrayList<CardRow> cards = db.selectAllCardByCustomerId(customer_id);
         CardRow.printCardRows(cards);
         
@@ -806,12 +815,12 @@ public class App {
         }
 
         System.out.println(" ");
-        System.out.println("**Showing all credit card info**");
+        System.out.println("** Showing all credit card info **");
         CreditRow.printCredits(creditCard);
     }
 
     public static String showAllVendors(Database db, BufferedReader in){
-        System.out.println("**Showing all vendors**");
+        System.out.println("** Showing all vendors **");
         ArrayList<VendorRow> vendors = db.selectAllVendor();
         VendorRow.printVendors(vendors);
         String store = "";
@@ -931,7 +940,7 @@ public class App {
                     System.out.println("\nDisconnecting from Bank... BYE!");
                     return;
                 default:
-                    System.out.println("Please enter a valid character :>");
+                    System.out.println("Please enter a valid character :> ");
                     continue;
             }
         }

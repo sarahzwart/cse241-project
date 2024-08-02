@@ -89,6 +89,7 @@ public class Database{
      * Declarations for Insertions
      */
     private PreparedStatement insertPurchase;
+    private PreparedStatement insertChecking;
     private PreparedStatement insertAccount;
     private PreparedStatement insertCreditCard;
     private PreparedStatement insertCustomer;
@@ -114,6 +115,9 @@ public class Database{
         // Set Up Prepared Statements
 
         try {
+            database.insertChecking = database.databaseConnection.prepareStatement(
+                "INSERT INTO Checking VALUES (?)"
+            );
             database.selectAllLoanByCustomer = database.databaseConnection.prepareStatement(
                 "SELECT * FROM Loan WHERE customer_id = ?"
             );
@@ -251,6 +255,7 @@ public class Database{
                 "INSERT INTO Card(card_type, customer_id, customer_name) VALUES ('credit', ?, ?)",
                 new String[]{"card_id"}
             );
+            
             database.insertCardTypeDebit= database.databaseConnection.prepareStatement(
                 "INSERT INTO Card(card_type, account_id, customer_id, customer_name) VALUES ('debit', ?, ?, ?)",
                 new String[]{"card_id"}
@@ -305,12 +310,14 @@ public class Database{
         databaseConnection = null;
         return true;
     }
-/*database.selectAllLoanByCustomer = database.databaseConnection.prepareStatement(
-                "SELECT * FROM Loan WHERE customer_id = ?"
-            );
-database.subtractFromLoan = database.databaseConnection.prepareStatement(
-    "UPDATE Loan SET amount = amount - ? WHERE account_id = ?"
-); */
+    public void insertChecking(String account_id){
+        try{
+            insertChecking.setString(1, account_id);
+            int affectedRows = insertChecking.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
     public ArrayList<LoanRow> selectAllLoanByCustomer(String customer_id){
         ArrayList<LoanRow> loans = new ArrayList<LoanRow>();
         try{
