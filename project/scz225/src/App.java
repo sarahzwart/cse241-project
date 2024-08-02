@@ -227,21 +227,55 @@ public class App {
             System.out.println("Invalid Command");
         }
     }
+    static char loanMenu2(BufferedReader in){
+        System.out.println("\nLoan Menu:");
+        System.out.println(" [V] View my Loan(s) ");
+        System.out.println(" [T] Take out a Loan ");
+        System.out.println(" [Q] Quit ");
+        String actions = "V T Q";
+        while (true) {
+            System.out.print("[" + actions + "] :> ");
+            String action;
+            try {
+              action = in.readLine();
+            } catch (IOException e) {
+              e.printStackTrace();
+              continue;
+            }
+            if (action.length() != 1)
+              continue;
+            if (actions.contains(action)) {
+              return action.charAt(0);
+            }
+            System.out.println("Invalid Command");
+        }
+    }
+    public static void loanAction2(BufferedReader in, Database db, String customer_id, String customer_name){
 
+    }
     public static void loanAction(BufferedReader in, Database db, String customer_id, String customer_name){
         while(true){
             char loanChoice = loanMenu(in);
+            ArrayList<LoanRow> loans = db.selectAllLoanByCustomer(customer_id);
             switch(loanChoice){
                 case 'V':
-                    ArrayList<LoanRow> loans = db.selectAllLoanByCustomer(customer_id);
-                    System.out.println("** Showing all loans of customer " + customer_name + " **");
-                    LoanRow.printLoans(loans);
+                    if(loans.size() == 0) {
+                        System.out.println("You do not have any loans out.");
+                    } else {
+                        System.out.println("** Showing all loans of customer " + customer_name + " **");
+                        LoanRow.printLoans(loans);
+                    }
                     continue;
                 case 'T':
                     getLoan(in, db, customer_id);
                     continue;
                 case 'P':
-                    payLoan(in, db, customer_id, customer_name);
+                    if(loans.size() == 0){
+                        System.out.println("You do not have any loans out to pay.\nPlease choose another option.");
+                    }
+                    else{
+                        payLoan(in, db, customer_id, customer_name);
+                    }
                     continue;
                 case 'Q':
                     return;
@@ -253,13 +287,13 @@ public class App {
     }
 
     public static void getLoan(BufferedReader in, Database db, String customer_id){
-        System.out.println("Secured loans are secured by your home address automatically.");
+        System.out.println("Mortgage secured by your home address automatically.");
         System.out.println("Unsecured loans are not.");
         double amount = 0.00;
         String loanType = "";
         while(true){
-            loanType = getString(in, "\nWould you like a secured or unsecured loan :> ");
-            if(loanType.equalsIgnoreCase("unsecured") || loanType.equalsIgnoreCase("secured")){
+            loanType = getString(in, "\nWould you like a mortgage or unsecured loan :> ");
+            if(loanType.equalsIgnoreCase("unsecured") || loanType.equalsIgnoreCase("mortgage")){
                 break;
             }
             else {
