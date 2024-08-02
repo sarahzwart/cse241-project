@@ -84,7 +84,7 @@ public class TransactionRow{
      * Print transactions
      */
     public void printTransactionRow() {
-        System.out.printf("| %-14d | %-15s | %-19s | %-10.2f | %-12s | %-10s | %-10s |\n", 
+        System.out.printf("| %-14s | %-15s | %-19s | %-10.2f | %-12s | %-10s | %-10s |\n", 
                           transaction_id, transaction_type, transaction_date, amount, customer_id, account_id, branch_id);
     }
     /**

@@ -1,16 +1,13 @@
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.*;
-import java.util.Scanner;
 import java.util.ArrayList;
-import java.util.List;
 import java.io.BufferedReader;
 
 public class App {
 
-    private static Database getConnection(BufferedReader in, String password) throws URISyntaxException{
+    private static Database getConnection(BufferedReader in, String password) throws URISyntaxException, SQLException {
         return Database.getDatabase("scz225", password);
     }
 
@@ -25,6 +22,7 @@ public class App {
         }
         return s;
     }
+
     static char employeePromptMenu(BufferedReader in){
         System.out.println("\nEmployee actions: ");
         System.out.println(" [C] View all customers");
@@ -33,7 +31,7 @@ public class App {
         System.out.println(" [T] View all transactions");
         System.out.println(" [L] View all loans");
         System.out.println(" [Q] Quit");
-        String actions = "C A T L Q"
+        String actions = "C D A T L Q" ;
         while(true){
             System.out.print("[" + actions + "] :> ");
             String action;
@@ -51,12 +49,13 @@ public class App {
             System.out.println("Invalid Command");
         }
     }
+
     static char userOrEmployeePromptMenu(BufferedReader in){
         System.out.println("\nEmployee or User: ");
         System.out.println(" [E] Employee Login");
         System.out.println(" [U] User Login");
         System.out.println(" [Q] Quit");
-        String actions = "E U Q"
+        String actions = "E U Q";
         while(true){
             System.out.print("[" + actions + "] :> ");
             String action;
@@ -204,6 +203,159 @@ public class App {
         }
     }
 
+    static char loanMenu(BufferedReader in){
+        System.out.println("\nLoan Menu:");
+        System.out.println(" [V] View my Loan(s): ");
+        System.out.println(" [T] Take out a Loan: ");
+        System.out.println(" [P] Pay my Loan(s): ");
+        System.out.println(" [Q] Quit: ");
+        String actions = "V T P Q";
+        while (true) {
+            System.out.print("[" + actions + "] :> ");
+            String action;
+            try {
+              action = in.readLine();
+            } catch (IOException e) {
+              e.printStackTrace();
+              continue;
+            }
+            if (action.length() != 1)
+              continue;
+            if (actions.contains(action)) {
+              return action.charAt(0);
+            }
+            System.out.println("Invalid Command");
+        }
+    }
+
+    public static void loanAction(BufferedReader in, Database db, String customer_id, String customer_name){
+        while(true){
+            char loanChoice = loanMenu(in);
+            switch(loanChoice){
+                case 'V':
+                    ArrayList<LoanRow> loans = db.selectAllLoanByCustomer(customer_id);
+                    System.out.println("** Showing all loans of customer " + customer_name + " **");
+                    LoanRow.printLoans(loans);
+                    continue;
+                case 'T':
+                    getLoan(in, db, customer_id);
+                    continue;
+                case 'P':
+                    payLoan(in, db, customer_id, customer_name);
+                    continue;
+                case 'Q':
+                    return;
+                default:
+                    continue;
+
+            }
+        }
+    }
+
+    public static void getLoan(BufferedReader in, Database db, String customer_id){
+        System.out.println("Secured loans are secured by your home address automatically.");
+        System.out.println("Unsecured loans are not.");
+        double amount = 0.00;
+        String loanType = "";
+        while(true){
+            loanType = getString(in, "\nWould you like a secured or unsecured loan :>");
+            if(loanType.equalsIgnoreCase("unsecured") || loanType.equalsIgnoreCase("secured")){
+                break;
+            }
+            else {
+                System.out.println("Invalid loan type. Please try again.");
+                continue;
+            }
+        }
+        while(true){
+            String loanAmount = getString(in, "\n How much would you like your loan to be :>");
+            try {
+                amount = Double.parseDouble(loanAmount);
+                break;
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid amount. Please enter a valid number.");
+                continue;
+            }
+        }
+        double interest_rate = 0.00;
+        double monthlypayment = 0.00;
+        if(amount > 100000 ){
+            interest_rate = 5.00;
+            monthlypayment = 500.00;
+        }
+        else if (amount < 100000 || amount > 50000){
+            interest_rate = 4.00;
+            monthlypayment = 400.00;
+        }
+        else if (amount < 50000 || amount > 25000){
+            interest_rate = 3.75;
+            monthlypayment = 350.00;
+        }
+        else if (amount < 25000 || amount > 10000){
+            interest_rate = 5.00;
+            monthlypayment = 250.00;
+        }
+        else if (amount < 10000 || amount > 1000){
+            interest_rate = 5.00;
+            monthlypayment = 100.00;
+        }
+        else {
+            interest_rate = 6.00;
+            monthlypayment = 50.00;
+        }
+        db.insertLoan(loanType, amount, interest_rate, monthlypayment, customer_id);
+    }
+
+    public static void payLoan(BufferedReader in, Database db, String customer_id, String customer_name ){
+        ArrayList<LoanRow> loans = db.selectAllLoanByCustomer(customer_id);
+        boolean validLoan = false;
+        String loan_chosen = "";
+        while (!validLoan) {
+            loan_chosen = getString(in, "\nPlease enter the loan id of the loan you wish to pay :> ");
+            for (LoanRow l: loans) {
+                if (loan_chosen.equalsIgnoreCase(l.getLoanID())) {
+                    validLoan = true;
+                    break;
+                }
+            }
+            if (!validLoan) {
+                System.out.println("Error: Loan'" + loan_chosen + "' not found. Please enter a valid branch ID");
+            }
+        }
+        ArrayList<AccountRow> accounts = db.getAccountByCustomer(customer_id);
+        System.out.println("** Showing all accounts of customer " + customer_name + " **");
+        System.out.printf("| %-10s | %-12s | %-10s | %-13s |\n",
+                "Account ID", "Account Type", "Balance", "Interest Rate");
+        System.out.println("---------------------------------------------------------");
+        boolean validAccount = false;
+        String account_chosen = "";
+        double payment = 0.00;
+        while (!validAccount) {
+            account_chosen = getString(in, "\nPlease enter the ID of the Account you would like to use to pay your loan :> ");
+            for (AccountRow a: accounts) {
+                if (account_chosen.equalsIgnoreCase(a.getAccountID())) {
+                    validAccount = true;
+                    break;
+                }
+            }
+            if (!validAccount) {
+                System.out.println("Error: Account'" + account_chosen + "' not found. Please enter a valid Account ID");
+            }
+        }
+        while(true){
+            String loanPayment = getString(in, "\n How much would you like to pay :>");
+            try {
+                payment = Double.parseDouble(loanPayment);
+                break;
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid amount. Please enter a valid number.");
+                continue;
+            }
+        }
+        db.subtractFromLoan(loan_chosen, payment);
+        db.subtractFromAccountAmount(payment, account_chosen);
+    }
+
     public static void depositWithdrawalChoice(BufferedReader in, Database db, String customer_id, String customer_name){
         while(true){
             char tableChoice = depositWithDrawalMenu(in);
@@ -226,46 +378,43 @@ public class App {
             }
         }
     }
+
     public static void handleEmployeeActions(Database db, BufferedReader in) {
-    while (true) {
-        char action = employeePromptMenu(in);
-        switch (action) {
-            case 'C':
-                // View all customers
-                ArrayList<Customer> customers = db.getAllCustomer();
-                Customer.printCustomers(customers);
-                break;
-            case 'A':
-                // View all accounts
-                ArrayList<AccountRow> accounts = db.getAllAccount();
-                AccountRow.printAccounts(accounts);
-                break;
-            case 'T':
-                // View all transactions
-                ArrayList<TransactionRow> transactions = db.getAllTransaction();
-                TransactionRow.printTransactions(transactions);
-                break;
-            case 'D':
-                // View all cards
-                ArrayList<CardRow> cards = db.getAllCard();
-                CardRow.printCardRows(cards);
-                break;
-            case 'L':
-                // View all loans (assuming you have a method for this)
-                ArrayList<LoanRow> loans = db.getAllLoan();
-                LoanRow.printLoans(loans);
-                break;
-            case 'Q':
-                System.out.println("Quitting Employee Actions...");
-                return; // Exit the method
-            default:
-                System.out.println("Invalid action. Please try again.");
-                break;
+        while (true) {
+            char action = employeePromptMenu(in);
+            switch (action) {
+                case 'C':
+                    ArrayList<Customer> customers = db.selectAllCustomer();
+                    Customer.printCustomers(customers);
+                    continue;
+                case 'D':
+                    ArrayList<CardRow> cards = db.selectAllCard();
+                    CardRow.printCardRows(cards);
+                    continue;
+                case 'A':
+                    ArrayList<AccountRow> accounts = db.selectAllAccount();
+                    AccountRow.printAccounts(accounts);
+                    continue;
+                case 'T':
+                    // View all transactions
+                    ArrayList<TransactionRow> transactions = db.selectAllTransaction();
+                    TransactionRow.printTransactions(transactions);
+                    continue;
+                case 'L':
+                    // View all loans (assuming you have a method for this)
+                    ArrayList<LoanRow> loans = db.selectAllLoan();
+                    LoanRow.printLoans(loans);
+                    continue;
+                case 'Q':
+                    return; // Exit the method
+                default:
+                    continue;
+            }
         }
     }
-}
+    
     public static void depositAction(BufferedReader in, Database db, String customer_id){
-        ArrayList<BranchRow> branches = db.selectAllBranch();
+        ArrayList<BranchRow> branches = db.selectAllBranchByType();
         ArrayList<AccountRow> accounts = db.getAccountByCustomer(customer_id);
         BranchRow.printBranchRowsFullService(branches);
         // Loop for Branches
@@ -317,9 +466,36 @@ public class App {
 
     public static void withdrawalAction(BufferedReader in, Database db, String customer_id){
         ArrayList<BranchRow> branches = db.selectAllBranch();
+        ArrayList<AccountRow> accounts = db.getAccountByCustomer(customer_id);
         BranchRow.printBranchRows(branches);
-        String branch_chosen = getString(in, "\nPlease enter the branch you wish to use :> ");
-        String account_id = getString(in, "\nPlease enter the account_id in which you would like to make a withdrawal :> ");
+        boolean validBranch = false;
+        String branch_chosen = "";
+        while (!validBranch) {
+            branch_chosen = getString(in, "\nPlease enter the branch you wish to use :> ");
+            for (BranchRow b: branches) {
+                if (branch_chosen.equalsIgnoreCase(b.getBranchId())) {
+                    validBranch = true;
+                    break;
+                }
+            }
+            if (!validBranch) {
+                System.out.println("Error: Branch'" + branch_chosen + "' not found. Please enter a valid branch ID");
+            }
+        }
+        String account_id = "";
+        boolean validAccount = false;
+        while (!validAccount) {
+            account_id = getString(in, "\nPlease enter the account_id in which you would like to make a deposit :> ");
+            for (AccountRow a: accounts) {
+                if (account_id.equalsIgnoreCase(a.getAccountID())) {
+                    validAccount = true;
+                    break;
+                }
+            }
+            if (!validAccount) {
+                System.out.println("Error: Acccount'" + account_id + "' not found. Please enter a valid Account ID");
+            }
+        }
         AccountRow account_info = db.selectOneAccount(account_id);
         String account_type = account_info.getAccountType();
         double account_bal = account_info.getBalance();
@@ -490,13 +666,11 @@ public class App {
                     break;
                 }
             }
-
             if (!validAccount) {
                 System.out.println("Invalid account ID. Please choose a valid checking account.");
             }
         }
         db.insertNewDebitCard(account_id, customer_id, customer_name);
-
     }
 
     public static void createCredit(BufferedReader in, Database db, String customer_id, String customer_name){
@@ -512,9 +686,6 @@ public class App {
             }   
         }
         db.insertNewCreditCard(customer_id, customer_name, amount);
-
-
-
     }
 
     public static void purchaseChoice(BufferedReader in, Database db, String customer_id, String customer_name){
@@ -534,9 +705,6 @@ public class App {
                     continue;
             }
         }
-
-        
-        
     }
 
     public static void useCredit(BufferedReader in, Database db, String card_id, String vendor_id){
@@ -669,44 +837,18 @@ public class App {
        return db.selectOneVendorId(store);
     }
 
-
-
-    
-    public static void main(String[] args) {
-        // USER LOGIN
-        BufferedReader in = new BufferedReader(new InputStreamReader(System.in));   
-        String password = getString(in, "\nPlease enter password: ");
-        Database db = new Database();
+    public static void handleUserOption(Database db, BufferedReader in){
         boolean validUser = false;
-        try {
-            db = getConnection(in, password);
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-            return;
-        }
-        System.out.println("Connection Successful");
-        // USER LOGIN ^^^
-
-        char loginAction = userOrEmployeePromptMenu(in);
-        while(true){
-            switch(loginAction){
-                case 'E':
-
-                case 'U':
-                    break;
-                case 'Q':
-                    db.disconnect();
-                    System.out.println("\nDisconnecting from Bank Database... BYE!");
-                    return;
-            }
-        }
-
         System.out.println("Showing list of customer names to choose from: ");
         ArrayList<Customer> customers = db.selectAllCustomer();
         Customer.printCustomerNames(customers);
         String user = "";
         while (!validUser) {
-            user = getString(in, "\nPlease enter the user you would like to login as from the list above :> ");
+            user = getString(in, "\nPlease enter the user you would like to login as or type 'Q' to go back :> ");
+            if (user.equalsIgnoreCase("Q")) {
+                System.out.println("\nReturning to main menu...");
+                return;
+            }
             for (Customer c : customers) {
                 if (user.equalsIgnoreCase(c.getCustomerName())) {
                     validUser = true;
@@ -718,7 +860,6 @@ public class App {
             }
         }
 
-        // GET USER INFO
         Customer customer = db.selectOneCustomerByName(user);
         String customer_id = customer.getCustomerID();
         System.out.println(customer_id);
@@ -739,19 +880,63 @@ public class App {
                     debitOrCreditChoice(in, db, customer_id, user);
                     continue;
                 case 'L':
-                    System.out.println("\n**Take out a Loan**");
+                    System.out.println("\n**Manage Loans**");
+                    loanAction(in, db, customer_id, user);
                     continue;
                 case 'P':
                     System.out.println("\n**Make a Purchase**");
                     purchaseChoice(in, db, customer_id, user);
                     continue;
                 case 'Q':
-                    db.disconnect();
-                    System.out.println("\nDisconnecting from Bank Database... BYE!");
+                    System.out.println("\nReturning to Employee/User Option Menu..");
                     return;
                 default: 
                     continue;
             }
         }
+    }
+
+    
+    public static void main(String[] args) {
+        // USER LOGIN
+        BufferedReader in = new BufferedReader(new InputStreamReader(System.in));   
+        Database db = null;
+
+        while (db == null) {
+            String password = getString(in, "\nPlease enter password: ");
+            try {
+                db = getConnection(in, password);
+            } catch (URISyntaxException e) {
+                System.out.println("Incorrect password. Please try again.");
+                return;
+            } catch (SQLException e) {
+                // Print a user-friendly message instead of the stack trace
+                System.out.println("Incorrect password. Please try again.");
+                db = null; // Ensure db is null if connection fails
+            }
+        }
+        System.out.println("**HELLO! WELCOME TO NSL BANK**");
+        // USER LOGIN ^^^
+        while(true){
+            char loginAction = userOrEmployeePromptMenu(in);
+            switch(loginAction){
+                case 'E':
+                    handleEmployeeActions(db, in);
+                    continue;
+                case 'U':
+                    handleUserOption(db, in);
+                    continue;
+                case 'Q':
+                    db.disconnect();
+                    System.out.println("\nDisconnecting from Bank... BYE!");
+                    return;
+                default:
+                    System.out.println("Please enter a valid character :>");
+                    continue;
+            }
+        }
+
+        // GET USER INFO
+        
     }
 }

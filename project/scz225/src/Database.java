@@ -35,14 +35,9 @@ public class Database{
      */
     private PreparedStatement selectAllAccount;
     private PreparedStatement selectOneAccount;
-    private PreparedStatement selectAllAccountByType;
-    private PreparedStatement selectAllAccountByBalance;
     private PreparedStatement addToAccountAmount;
     private PreparedStatement subtractFromAccountAmount;
-
     private PreparedStatement getMinimumBalance;
-    private PreparedStatement getTypeOfAccount;
-    private PreparedStatement getSavingsRow;
 
 
     /**
@@ -51,14 +46,11 @@ public class Database{
     private PreparedStatement selectAllBranch;
     private PreparedStatement selectOneBranch;
     private PreparedStatement selectAllBranchByType;
-    
     /**
      * Prepared Statements for Card Table
      */
     private PreparedStatement selectAllCard;
     private PreparedStatement selectOneCard;
-    private PreparedStatement selectOneCardByType;
-
     /**
      * Prepared Statements for Credit Table
      */
@@ -77,6 +69,8 @@ public class Database{
      */
     private PreparedStatement selectAllLoan;
     private PreparedStatement selectOneLoan;
+    private PreparedStatement selectAllLoanByCustomer;
+    private PreparedStatement subtractFromLoan;
 
     /**
      * Prepared Statements for Saving Table
@@ -96,25 +90,11 @@ public class Database{
      */
     private PreparedStatement insertPurchase;
     private PreparedStatement insertAccount;
-    private PreparedStatement insertBranch;
-    private PreparedStatement insertCard;
     private PreparedStatement insertCreditCard;
     private PreparedStatement insertCustomer;
     private PreparedStatement insertLoan;
     private PreparedStatement insertSavingsAccount;
     private PreparedStatement insertTransaction;
-
-    /**
-     * Declarations for Deletions
-     */
-    private PreparedStatement deleteAccount;
-    private PreparedStatement deleteBranch;
-    private PreparedStatement deleteCard;
-    private PreparedStatement deleteCreditCard;
-    private PreparedStatement deleteCustomer;
-    private PreparedStatement deleteLoan;
-    private PreparedStatement deleteSavingsAccount;
-    private PreparedStatement deleteTransaction;
 
     static Database getDatabase( String user, String password){
         Database database = new Database();
@@ -127,14 +107,34 @@ public class Database{
             }
             database.databaseConnection = conn;
         } catch (SQLException e){
-            System.err.println("Error: DriverManager.getConnection() threw a SQLException");
-            e.printStackTrace();
+            System.err.println("Password is incorrect please try again..");
             return null;
         }
 
         // Set Up Prepared Statements
 
         try {
+            database.selectAllLoanByCustomer = database.databaseConnection.prepareStatement(
+                "SELECT * FROM Loan WHERE customer_id = ?"
+            );
+            database.subtractFromLoan = database.databaseConnection.prepareStatement(
+                "UPDATE Loan SET amount = amount - ? WHERE loan_id = ?"
+            );
+            database.selectAllAccount = database.databaseConnection.prepareStatement(
+                "SELECT * FROM Account"
+            );
+            database.selectAllLoan = database.databaseConnection.prepareStatement(
+                "SELECT * FROM Loan"
+            );
+            database.selectAllTransaction = database.databaseConnection.prepareStatement(
+                "SELECT * FROM Transaction"
+            );
+            database.selectAllCard = database.databaseConnection.prepareStatement(
+                "SELECT * FROM Card"
+            );
+            database.selectAllAccount = database.databaseConnection.prepareStatement(
+                "SELECT * FROM Account"
+            );
             database.insertPurchase = database.databaseConnection.prepareStatement(
                 "INSERT INTO Purchase (card_id, vendor_id, amount, purchase_date) VALUES (?, ?, ?, ?)"
             );
@@ -173,13 +173,6 @@ public class Database{
             database.selectOneAccount = database.databaseConnection.prepareStatement(
                 "SELECT * FROM Account WHERE account_id = ?"
             );
-            database.selectAllAccountByType = database.databaseConnection.prepareStatement(
-                "SELECT * FROM Account WHERE account_type = ?"
-            );
-            database.selectAllAccountByBalance = database.databaseConnection.prepareStatement(
-                "SELECT * FROM Account WHERE balance > ?"
-            );
-
             // BRANCH
             database.selectAllBranch = database.databaseConnection.prepareStatement(
                 "SELECT * FROM Branch"
@@ -188,7 +181,7 @@ public class Database{
                 "SELECT * FROM Branch WHERE branch_id = ?"
             );
             database.selectAllBranchByType = database.databaseConnection.prepareStatement(
-                "SELECT * FROM Branch WHERE branch_type = ?"
+                "SELECT * FROM Branch WHERE branch_type = 'Full Service'"
             );
 
             // CARD
@@ -198,10 +191,6 @@ public class Database{
             database.selectOneCard = database.databaseConnection.prepareStatement(
                 "SELECT * FROM Card WHERE card_id = ?"
             );
-            database.selectOneCardByType = database.databaseConnection.prepareStatement(
-                "SELECT * FROM Card WHERE card_type = ? and customer_id = ?"
-            ); 
-
             database.selectAllCardByCustomerId = database.databaseConnection.prepareStatement(
                 "SELECT * FROM Card WHERE customer_id = ?"
             );
@@ -315,6 +304,124 @@ public class Database{
         }
         databaseConnection = null;
         return true;
+    }
+/*database.selectAllLoanByCustomer = database.databaseConnection.prepareStatement(
+                "SELECT * FROM Loan WHERE customer_id = ?"
+            );
+database.subtractFromLoan = database.databaseConnection.prepareStatement(
+    "UPDATE Loan SET amount = amount - ? WHERE account_id = ?"
+); */
+    public ArrayList<LoanRow> selectAllLoanByCustomer(String customer_id){
+        ArrayList<LoanRow> loans = new ArrayList<LoanRow>();
+        try{
+            selectAllLoanByCustomer.setString(1, customer_id);
+            ResultSet rs = selectAllLoanByCustomer.executeQuery();
+            while (rs.next()) {
+                String loan_id = rs.getString("loan_id");
+                String loan_type = rs.getString("loan_type");
+                double amount = rs.getDouble("amount");
+                double interest_rate = rs.getDouble("interest_rate");
+                double monthly_payment = rs.getDouble("monthly_payment");
+                String cust_id = rs.getString("customer_id");
+                loans.add(new LoanRow(loan_id, loan_type, amount,interest_rate,monthly_payment, cust_id));
+            }
+        } catch (SQLException e) {
+            System.out.println("Error selectAllLoan");
+            e.printStackTrace();
+        }
+        return loans;
+    }
+    public void subtractFromLoan(String loan_id, double amount){
+        try{
+            subtractFromLoan.setDouble(1, amount);
+            subtractFromLoan.setString(2, loan_id);
+            int rowsAffected = subtractFromLoan.executeUpdate();
+            if (rowsAffected == 0) {
+                System.out.println("No loan found with the provided loan_id.");
+            } else {
+                System.out.println("Loan payment successful.");
+            }
+        } catch (SQLException e) {
+            System.out.println("Error in subtractFromLoan");
+            e.printStackTrace();
+        }
+    }
+    public ArrayList<AccountRow> selectAllAccount() {
+        ArrayList<AccountRow> accounts = new ArrayList<AccountRow>();
+        try {
+            ResultSet rs = selectAllAccount.executeQuery();
+            while (rs.next()) {
+                String account_id = rs.getString("account_id");
+                String account_type = rs.getString("account_type");
+                double balance = rs.getDouble("balance");
+                double interest_rate = rs.getDouble("interest_rate");
+                accounts.add(new AccountRow(account_id, account_type, balance, interest_rate));
+            }
+        } catch (SQLException e) {
+            System.out.println("Error selectAllAccount");
+            e.printStackTrace();
+        }
+        return accounts;
+    }
+    // String loan_id, String loan_type, double amount, double interest_rate, double monthly_payment, String customer_id
+    public ArrayList<LoanRow> selectAllLoan() {
+        ArrayList<LoanRow> loans = new ArrayList<LoanRow>();
+        try {
+            ResultSet rs = selectAllLoan.executeQuery();
+            while (rs.next()) {
+                String loan_id = rs.getString("loan_id");
+                String loan_type = rs.getString("loan_type");
+                double amount = rs.getDouble("amount");
+                double interest_rate = rs.getDouble("interest_rate");
+                double monthly_payment = rs.getDouble("monthly_payment");
+                String customer_id = rs.getString("customer_id");
+                loans.add(new LoanRow(loan_id, loan_type, amount,interest_rate,monthly_payment, customer_id));
+            }
+        } catch (SQLException e) {
+            System.out.println("Error selectAllLoan");
+            e.printStackTrace();
+        }
+        return loans;
+    }
+
+    public ArrayList<TransactionRow> selectAllTransaction() {
+        ArrayList<TransactionRow> transactions = new ArrayList<>();
+        try {
+            ResultSet rs = selectAllTransaction.executeQuery();
+            while (rs.next()) {
+                String transaction_id = rs.getString("transaction_id");
+                String transaction_type = rs.getString("transaction_type");
+                Timestamp transaction_date = rs.getTimestamp("transaction_date");
+                double amount = rs.getDouble("amount");
+                String customer_id = rs.getString("customer_id");
+                String account_id = rs.getString("account_id");
+                String branch_id = rs.getString("branch_id");
+                transactions.add(new TransactionRow(transaction_id, transaction_type, transaction_date, amount, customer_id, account_id, branch_id));
+            }
+        } catch (SQLException e) {
+            System.out.println("Error selectAllTransaction");
+            e.printStackTrace();
+        }
+        return transactions;
+    }
+
+    public ArrayList<CardRow> selectAllCard() {
+        ArrayList<CardRow> cards = new ArrayList<>();
+        try {
+            ResultSet rs = selectAllCard.executeQuery();
+            while (rs.next()) {
+                String card_id = rs.getString("card_id");
+                String card_type = rs.getString("card_type");
+                String account_id = rs.getString("account_id");
+                String customer_id = rs.getString("customer_id");
+                String customer_name = rs.getString("customer_name");
+                cards.add(new CardRow(card_id, card_type, account_id, customer_id, customer_name));
+            }
+        } catch (SQLException e) {
+            System.out.println("Error selectAllCard");
+            e.printStackTrace();
+        }
+        return cards;
     }
     // account_type, balance, interest_rate
     // insert methods
@@ -727,6 +834,20 @@ public class Database{
             rs.close();
         } catch (SQLException e) {
             System.out.println("Error in selectAllBranch");
+            e.printStackTrace();
+        }
+        return branches;
+    }
+    ArrayList<BranchRow> selectAllBranchByType(){
+        ArrayList<BranchRow> branches = new ArrayList<BranchRow>();
+        try {
+            ResultSet rs = selectAllBranchByType.executeQuery();
+            while (rs.next()) {
+                branches.add(new BranchRow(rs.getString("branch_id"), rs.getString("branch_type")));
+            }
+            rs.close();
+        } catch (SQLException e) {
+            System.out.println("Error in selectAllBranchByType");
             e.printStackTrace();
         }
         return branches;

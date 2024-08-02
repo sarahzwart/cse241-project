@@ -92,7 +92,7 @@ public class LoanRow {
      * Print loan row. 
      */
     public void printLoanRow() {
-        System.out.printf("| %-8d | %-10s | %-10.2f | %-12.2f | %-15.2f | %-10d |\n",
+        System.out.printf("| %-8s | %-10s | %-10.2f | %-12.2f | %-15.2f | %-10s|\n",
                 loan_id, loan_type, amount, interest_rate, monthly_payment, customer_id);
     }
 
