@@ -14,6 +14,7 @@ public class Database{
     /**
      * Purchases
      */
+    private PreparedStatement showDebitInfo;
     private PreparedStatement selectOneVendorId;
     private PreparedStatement selectAllVendor;
     private PreparedStatement showPastPurchasesByCardId;
@@ -115,6 +116,9 @@ public class Database{
         // Set Up Prepared Statements
 
         try {
+            database.showDebitInfo = database.databaseConnection.prepareStatement(
+                "SELECT card.customer_name, card.card_id, account.balance FROM account, card WHERE account.account_id = ? AND card.account_id = ?"
+            );
             database.insertChecking = database.databaseConnection.prepareStatement(
                 "INSERT INTO Checking VALUES (?)"
             );
@@ -309,6 +313,21 @@ public class Database{
         }
         databaseConnection = null;
         return true;
+    }
+    public void showDebitInfo(String acccount_id){
+        try{
+            showDebitInfo.setString(1, acccount_id);
+            showDebitInfo.setString(2, acccount_id);
+            ResultSet rs = showDebitInfo.executeQuery();
+            while (rs.next()) {
+                String customerName = rs.getString("customer_name");
+                String cardId = rs.getString("card_id");
+                double balance = rs.getDouble("balance");
+                System.out.printf("| %-20s | %-10s | %-10.2f |\n", customerName, cardId, balance);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
     public void insertChecking(String account_id){
         try{

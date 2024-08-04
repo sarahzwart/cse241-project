@@ -131,11 +131,12 @@ public class App {
 
     static char debitOrCreditMenu(BufferedReader in){
         System.out.println("\nOpen a Credit or Debit Card:");
+        System.out.println(" [V] View All Card Info");
         System.out.println(" [C] Open a Credit Card");
         System.out.println(" [D] Open a Debit Card");
         System.out.println(" [Q] Quit");
 
-        String actions = "C D Q";
+        String actions = "V C D Q";
         while (true) {
             System.out.print("[" + actions + "] :> ");
             String action;
@@ -667,6 +668,9 @@ public class App {
         while(true){
             char tableChoice = debitOrCreditMenu(in);
             switch (tableChoice) {
+                case 'V':
+                    showCardInformation(db, customer_name, customer_id);
+                    continue;
                 case 'D':
                     createDebit(in, db, customer_id, customer_name);
                     continue;
@@ -834,7 +838,15 @@ public class App {
         System.out.println(" ");
         System.out.println("** Showing all cards of " + customer_name + " **");
         ArrayList<CardRow> cards = db.selectAllCardByCustomerId(customer_id);
-        CardRow.printCardRows(cards);
+
+        System.out.println("** DEBIT **");
+        System.out.printf("| %-20s | %-10s | %-10s |\n", "Customer Name", "Card ID", "Balance");
+        System.out.println("----------------------------------------------");
+        for(CardRow c : cards){
+            if(c.getCardType().equalsIgnoreCase("debit")){
+                db.showDebitInfo(c.getAccountId());
+            }
+        }
         
         ArrayList<CreditRow> creditCard = new ArrayList<CreditRow>();
         for (CardRow card : cards) {
@@ -849,7 +861,7 @@ public class App {
         }
 
         System.out.println(" ");
-        System.out.println("** Showing all credit card info **");
+        System.out.println("** CREDIT **");
         CreditRow.printCredits(creditCard);
     }
 
