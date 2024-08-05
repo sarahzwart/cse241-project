@@ -110,6 +110,7 @@ public class Database{
             database.databaseConnection = conn;
         } catch (SQLException e){
             System.err.println("Password is incorrect please try again..");
+            e.printStackTrace();
             return null;
         }
 
