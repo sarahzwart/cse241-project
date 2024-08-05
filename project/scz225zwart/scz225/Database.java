@@ -117,7 +117,7 @@ public class Database{
 
         try {
             database.showDebitInfo = database.databaseConnection.prepareStatement(
-                "SELECT card.customer_name, card.card_id, account.balance FROM account, card WHERE account.account_id = ? AND card.account_id = ?"
+                "SELECT card.customer_name, card.card_id, account.balance FROM account, card WHERE account.account_id = ? AND card.account_id = ? AND card.customer_id = ?"
             );
             database.insertChecking = database.databaseConnection.prepareStatement(
                 "INSERT INTO Checking VALUES (?)"
@@ -314,10 +314,11 @@ public class Database{
         databaseConnection = null;
         return true;
     }
-    public void showDebitInfo(String acccount_id){
+    public void showDebitInfo(String acccount_id, String customer_id){
         try{
             showDebitInfo.setString(1, acccount_id);
             showDebitInfo.setString(2, acccount_id);
+            showDebitInfo.setString(3, customer_id);
             ResultSet rs = showDebitInfo.executeQuery();
             while (rs.next()) {
                 String customerName = rs.getString("customer_name");

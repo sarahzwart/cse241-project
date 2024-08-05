@@ -251,9 +251,6 @@ public class App {
             System.out.println("Invalid Command");
         }
     }
-    public static void loanAction2(BufferedReader in, Database db, String customer_id, String customer_name){
-
-    }
     public static void loanAction(BufferedReader in, Database db, String customer_id, String customer_name){
         while(true){
             char loanChoice = loanMenu(in);
@@ -318,19 +315,19 @@ public class App {
             interest_rate = 5.00;
             monthlypayment = 500.00;
         }
-        else if (amount < 100000 || amount > 50000){
+        else if (amount < 100000 && amount > 50000){
             interest_rate = 4.00;
             monthlypayment = 400.00;
         }
-        else if (amount < 50000 || amount > 25000){
+        else if (amount < 50000 && amount > 25000){
             interest_rate = 3.75;
             monthlypayment = 350.00;
         }
-        else if (amount < 25000 || amount > 10000){
+        else if (amount < 25000 && amount > 10000){
             interest_rate = 5.00;
             monthlypayment = 250.00;
         }
-        else if (amount < 10000 || amount > 1000){
+        else if (amount < 10000 && amount > 1000){
             interest_rate = 5.00;
             monthlypayment = 100.00;
         }
@@ -345,10 +342,12 @@ public class App {
         ArrayList<LoanRow> loans = db.selectAllLoanByCustomer(customer_id);
         boolean validLoan = false;
         String loan_chosen = "";
+        System.out.println("** Showing all loans of customer " + customer_name + " **");
+        LoanRow.printLoans(loans);
         while (!validLoan) {
             loan_chosen = getString(in, "\nPlease enter the loan id of the loan you wish to pay :> ");
             for (LoanRow l: loans) {
-                if (loan_chosen.equalsIgnoreCase(l.getLoanID())) {
+                if (loan_chosen.equals(l.getLoanID())) {
                     validLoan = true;
                     break;
                 }
@@ -362,13 +361,14 @@ public class App {
         System.out.printf("| %-10s | %-12s | %-10s | %-13s |\n",
                 "Account ID", "Account Type", "Balance", "Interest Rate");
         System.out.println("---------------------------------------------------------");
+        AccountRow.printAccounts(accounts);
         boolean validAccount = false;
         String account_chosen = "";
         double payment = 0.00;
         while (!validAccount) {
             account_chosen = getString(in, "\nPlease enter the ID of the Account you would like to use to pay your loan :> ");
             for (AccountRow a: accounts) {
-                if (account_chosen.equalsIgnoreCase(a.getAccountID())) {
+                if (account_chosen.equals(a.getAccountID())) {
                     validAccount = true;
                     break;
                 }
@@ -402,10 +402,10 @@ public class App {
                     AccountRow.printAccounts(accounts);
                     continue;
                 case 'D':
-                    depositAction(in, db, customer_id);
+                    depositAction(in, db, customer_id, customer_name);
                     continue;
                 case 'W':
-                    withdrawalAction(in, db, customer_id);
+                    withdrawalAction(in, db, customer_id, customer_name);
                     continue;
                 case 'Q':
                     return;
@@ -449,9 +449,8 @@ public class App {
         }
     }
     
-    public static void depositAction(BufferedReader in, Database db, String customer_id){
+    public static void depositAction(BufferedReader in, Database db, String customer_id, String customer_name){
         ArrayList<BranchRow> branches = db.selectAllBranchByType();
-        ArrayList<AccountRow> accounts = db.getAccountByCustomer(customer_id);
         BranchRow.printBranchRowsFullService(branches);
         // Loop for Branches
         boolean validBranch = false;
@@ -459,7 +458,7 @@ public class App {
         while (!validBranch) {
             branch_chosen = getString(in, "\nPlease enter the branch you wish to use :> ");
             for (BranchRow b: branches) {
-                if (branch_chosen.equalsIgnoreCase(b.getBranchId())) {
+                if (branch_chosen.equals(b.getBranchId())) {
                     validBranch = true;
                     break;
                 }
@@ -471,10 +470,13 @@ public class App {
         // Loop for Account ID
         String account_id = "";
         boolean validAccount = false;
+        ArrayList<AccountRow> accounts = db.getAccountByCustomer(customer_id);
+        System.out.println("** Showing all accounts of customer " + customer_name + " **");
+        AccountRow.printAccounts(accounts);
         while (!validAccount) {
             account_id = getString(in, "\nPlease enter the account_id in which you would like to make a deposit :> ");
             for (AccountRow a: accounts) {
-                if (account_id.equalsIgnoreCase(a.getAccountID())) {
+                if (account_id.equals(a.getAccountID())) {
                     validAccount = true;
                     break;
                 }
@@ -500,7 +502,7 @@ public class App {
         System.out.println("Deposit made successfully! ");
     }
 
-    public static void withdrawalAction(BufferedReader in, Database db, String customer_id){
+    public static void withdrawalAction(BufferedReader in, Database db, String customer_id, String customer_name){
         ArrayList<BranchRow> branches = db.selectAllBranch();
         ArrayList<AccountRow> accounts = db.getAccountByCustomer(customer_id);
         BranchRow.printBranchRows(branches);
@@ -509,7 +511,7 @@ public class App {
         while (!validBranch) {
             branch_chosen = getString(in, "\nPlease enter the branch you wish to use :> ");
             for (BranchRow b: branches) {
-                if (branch_chosen.equalsIgnoreCase(b.getBranchId())) {
+                if (branch_chosen.equals(b.getBranchId())) {
                     validBranch = true;
                     break;
                 }
@@ -521,9 +523,9 @@ public class App {
         String account_id = "";
         boolean validAccount = false;
         while (!validAccount) {
-            account_id = getString(in, "\nPlease enter the account_id in which you would like to make a deposit :> ");
+            account_id = getString(in, "\nPlease enter the account_id in which you would like to withdraw from :> ");
             for (AccountRow a: accounts) {
-                if (account_id.equalsIgnoreCase(a.getAccountID())) {
+                if (account_id.equals(a.getAccountID())) {
                     validAccount = true;
                     break;
                 }
@@ -636,7 +638,7 @@ public class App {
                         if(accountAmount > 2000.00){
                             db.insertSavings(accountId, 1000.00, 50.00);
                         }
-                        else if(accountAmount > 1000.00 || accountAmount < 2000.00){
+                        else if(accountAmount > 1000.00 && accountAmount < 2000.00){
                             db.insertSavings(accountId, 500.00, 50.00);
                         }
                         else{
@@ -701,7 +703,7 @@ public class App {
         while (!validAccount) {
             account_id = getString(in, "\nChoose a checking account ID to connect to your debit card :> ");
             for (AccountRow a : accounts) {
-                if (a.getAccountID().equalsIgnoreCase(account_id)) {
+                if (a.getAccountID().equals(account_id)) {
                     validAccount = true;  
                     break;
                 }
@@ -809,11 +811,18 @@ public class App {
         String card_type = "";
         ArrayList<CardRow> cards = db.selectAllCardByCustomerId(customer_id);
         String card_id = "";
+        boolean validCard = false;
         while(true){
-            for (CardRow card : cards) {
+            while (!validCard) {
                 card_id = getString(in, "Please enter the ID of the Card you want to use :> ");
-                if (card.getCardId().equalsIgnoreCase(card_id)){
-                    break;
+                for (CardRow c : cards) {
+                    if (c.getCardId().equals(card_id)) {
+                        validCard = true;  
+                        break;
+                    }
+                }
+                if (!validCard) {
+                    System.out.println("Invalid card ID. Please choose a valid card.");
                 }
             }
             CardRow card = db.selectOneCard(card_id);
@@ -844,7 +853,7 @@ public class App {
         System.out.println("----------------------------------------------");
         for(CardRow c : cards){
             if(c.getCardType().equalsIgnoreCase("debit")){
-                db.showDebitInfo(c.getAccountId());
+                db.showDebitInfo(c.getAccountId(), customer_id);
             }
         }
         
@@ -879,7 +888,7 @@ public class App {
             // Validate the entered vendor name
             validVendor = false;
             for (VendorRow vendor : vendors) {
-                if (vendor.getVendorName().equalsIgnoreCase(store)) {
+                if (vendor.getVendorName().equals(store)) {
                     validVendor = true;
                     break;
                 }
@@ -899,19 +908,18 @@ public class App {
         Customer.printCustomerNames(customers);
         String user = "";
         while (!validUser) {
-            user = getString(in, "\nPlease enter the user you would like to login as or type 'Q' to go back :> ");
+            user = getString(in, "\nPlease enter the user you would like to login as or type 'Q' to quit :> ");
             if (user.equalsIgnoreCase("Q")) {
-                System.out.println("\nReturning to main menu...");
                 return;
             }
             for (Customer c : customers) {
-                if (user.equalsIgnoreCase(c.getCustomerName())) {
+                if (user.equals(c.getCustomerName())) {
                     validUser = true;
                     break;
                 }
             }
             if (!validUser) {
-                System.out.println("Error: User '" + user + "' not found. Please enter a valid user");
+                System.out.println("Error: User '" + user + "' not found. Please enter a valid user \nand use proper capitalization.");
             }
         }
 
