@@ -1,6 +1,6 @@
 import 'server-only';
 import { redirect } from 'next/navigation';
-import { supabase } from './supabase';
+import { getSupabase } from './supabase';
 import { getCustomerId, requireGate } from './session';
 
 // Data access layer. Reads mirror the original Database.java queries; every
@@ -33,7 +33,7 @@ function check<T>({ data, error }: { data: T | null; error: { message: string } 
 // before the admin password has been entered.
 async function db() {
   await requireGate();
-  return supabase;
+  return getSupabase();
 }
 
 // PostgREST returns at most 1,000 rows per request; page through the rest.
