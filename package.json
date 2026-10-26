@@ -1,0 +1,19 @@
+{
+  "name": "nsl-bank",
+  "private": true,
+  "type": "module",
+  "description": "NSL Bank (CSE241) - Supabase migration, seed data and database tests",
+  "scripts": {
+    "status": "node scripts/tracker-status.mjs",
+    "seed:generate": "node scripts/generate-seed.mjs",
+    "seed:check": "node scripts/generate-seed.mjs && git diff --exit-code -- supabase/seed.sql",
+    "verify:remote": "node scripts/verify-remote.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.12",
+    "@faker-js/faker": "10.6.0",
+    "vitest": "5.0.5"
+  }
+}

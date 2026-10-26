@@ -1,0 +1,72 @@
+:root {
+  --bg: #ffffff;
+  --fg: #1a1a1a;
+  --muted: #666;
+  --border: #ddd;
+  --accent: #1d4ed8;
+  --ok-bg: #e7f6ec;
+  --ok-fg: #14532d;
+  --error-bg: #fdecec;
+  --error-fg: #7f1d1d;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #121212;
+    --fg: #ececec;
+    --muted: #9a9a9a;
+    --border: #333;
+    --accent: #7aa2ff;
+    --ok-bg: #12301d;
+    --ok-fg: #b7f0c8;
+    --error-bg: #3a1414;
+    --error-fg: #ffc9c9;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+main { max-width: 960px; margin: 0 auto; padding: 0 16px 48px; }
+a { color: var(--accent); }
+h1 { font-size: 1.6rem; margin: 24px 0 8px; }
+h2 { font-size: 1.15rem; margin: 32px 0 8px; }
+.muted { color: var(--muted); }
+
+.site-header {
+  display: flex; align-items: baseline; gap: 12px;
+  max-width: 960px; margin: 0 auto; padding: 16px; border-bottom: 1px solid var(--border);
+}
+.site-header .lock { margin-left: auto; }
+.brand { font-weight: 700; font-size: 1.2rem; color: var(--fg); text-decoration: none; }
+
+nav.tabs { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 16px 0; }
+nav.tabs a[aria-current="page"] { font-weight: 700; color: var(--fg); text-decoration: none; }
+
+.who { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 16px; }
+
+.table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 0.95rem; }
+th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+th { font-weight: 600; }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+form.card {
+  display: grid; gap: 10px; max-width: 420px;
+  padding: 16px; margin: 8px 0; border: 1px solid var(--border); border-radius: 8px;
+}
+.forms { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+label { display: grid; gap: 4px; font-size: 0.9rem; }
+input, select, button { font: inherit; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--fg); }
+button { background: var(--accent); color: #fff; border-color: var(--accent); cursor: pointer; justify-self: start; }
+button.secondary { background: transparent; color: var(--accent); }
+
+.flash { padding: 10px 14px; border-radius: 6px; margin: 16px 0; }
+.flash.ok { background: var(--ok-bg); color: var(--ok-fg); }
+.flash.error { background: var(--error-bg); color: var(--error-fg); }
