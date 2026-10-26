@@ -42,15 +42,15 @@ insert into customer (customer_id, customer_name, birthday, address) values
   ('C00036', 'Ashley Thomas', '1978-09-12', '1106 Chew St, Macungie, PA 18062'),
   ('C00037', 'Tyler Nowak', '2003-05-26', '2077 Lafayette St, Macungie, PA 18062');
 
-insert into branch (branch_id, branch_type) values
-  ('B00001', 'Full Service'),
-  ('B00002', 'Full Service'),
-  ('B00003', 'ATM'),
-  ('B00004', 'Full Service'),
-  ('B00005', 'ATM'),
-  ('B00006', 'Full Service'),
-  ('B00007', 'Full Service'),
-  ('B00008', 'ATM');
+insert into branch (branch_id, branch_type, branch_name, address) values
+  ('B00001', 'Full Service', 'Bethlehem - South Side', '25 W 3rd St, Bethlehem, PA 18015'),
+  ('B00002', 'Full Service', 'Bethlehem - Downtown', '520 Main St, Bethlehem, PA 18018'),
+  ('B00003', 'ATM', 'Lehigh University - Packard Lab', '19 Memorial Dr W, Bethlehem, PA 18015'),
+  ('B00004', 'Full Service', 'Allentown - Hamilton St', '840 Hamilton St, Allentown, PA 18101'),
+  ('B00005', 'ATM', 'Allentown - Cedar Crest', '1250 S Cedar Crest Blvd, Allentown, PA 18103'),
+  ('B00006', 'Full Service', 'Easton - Centre Square', '1 Centre Sq, Easton, PA 18042'),
+  ('B00007', 'Full Service', 'Whitehall - MacArthur Rd', '2300 MacArthur Rd, Whitehall, PA 18052'),
+  ('B00008', 'ATM', 'Emmaus - Main St', '415 Main St, Emmaus, PA 18049');
 
 insert into account (account_id, account_type, balance, interest_rate) values
   ('A00001', 'checking', 81305.27, 0.00),

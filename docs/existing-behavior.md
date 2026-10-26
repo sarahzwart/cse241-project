@@ -12,7 +12,7 @@ Implemented in [`supabase/migrations/20261026000001_initial_schema.sql`](../supa
 | Table | Columns | Evidence |
 |---|---|---|
 | `customer` | customer_id, customer_name, birthday (date), address | `Customer.java`, `selectAllCustomer` |
-| `branch` | branch_id, branch_type | `BranchRow.java`; `'Full Service'` literal in `selectAllBranchByType` |
+| `branch` | branch_id, branch_type (+ branch_name, address — added by approved decision D6) | `BranchRow.java`; `'Full Service'` literal in `selectAllBranchByType` |
 | `account` | account_id, account_type, balance, interest_rate | `AccountRow.java`; ID format `A00003` (Database.java:537) |
 | `checking` | account_id | `INSERT INTO Checking VALUES (?)` (positional) |
 | `savings` | account_id, minimum_balance, penalty | `INSERT INTO Savings VALUES (?, ?, ?)` (positional — column order matters) |
@@ -79,7 +79,11 @@ Behaviors to keep exactly as they are, unless a change is approved:
 
 ## 3. Potential bugs (documented, NOT fixed — awaiting approval)
 
-Per CLAUDE.md, none of these are changed. Each one needs explicit approval first.
+Per CLAUDE.md, none of these are changed without explicit approval.
+
+**Decisions (2026-10-26, D4):** fix BUG-01, 02, 04, 05, 06, 07 (balance and overpay checks only, still no
+transaction row), 08, 09 and 10. Keep BUG-03 as-is. The fixes are implemented in the Phase 3 Postgres
+functions. The table below still describes the *original* behavior.
 
 | ID | Where | Observed behavior | Likely intent | Proposed fix / side effects |
 |---|---|---|---|---|

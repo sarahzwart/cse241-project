@@ -14,7 +14,7 @@ beforeAll(async () => {
 // Columns read by the Java Row classes, in the order positional INSERTs need.
 const EXPECTED_COLUMNS: Record<string, string[]> = {
   customer: ['customer_id', 'customer_name', 'birthday', 'address'],
-  branch: ['branch_id', 'branch_type'],
+  branch: ['branch_id', 'branch_type', 'branch_name', 'address'], // name/address added by D6
   account: ['account_id', 'account_type', 'balance', 'interest_rate'],
   checking: ['account_id'],
   savings: ['account_id', 'minimum_balance', 'penalty'],

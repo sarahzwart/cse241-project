@@ -7,6 +7,7 @@
     "status": "node scripts/tracker-status.mjs",
     "seed:generate": "node scripts/generate-seed.mjs",
     "seed:check": "node scripts/generate-seed.mjs && git diff --exit-code -- supabase/seed.sql",
+    "verify:remote": "node scripts/verify-remote.mjs",
     "test": "vitest run",
     "test:watch": "vitest"
   },

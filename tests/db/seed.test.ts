@@ -33,6 +33,10 @@ describe('volume', () => {
     expect(num(demo.loans)).toBeGreaterThanOrEqual(2);
   });
 
+  it('every branch has a display name and address (D6)', async () => {
+    expect(await count('select count(*) n from branch where branch_name is null or address is null')).toBe(0);
+  });
+
   it('customer names are unique (login is by exact name, App.java:916)', async () => {
     expect(await count('select count(*) - count(distinct customer_name) n from customer')).toBe(0);
   });

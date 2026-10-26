@@ -31,23 +31,23 @@ const DAY = 86_400_000;
 // Rules mirrored from App.java (amounts in cents)
 // ---------------------------------------------------------------------------
 
-// App.java:636-646 - tier chosen from the opening balance. Note the boundaries:
-// exactly $1000.00 or $2000.00 falls through to the lowest tier.
+// App.java:636-646 - tier chosen from the opening balance, with inclusive
+// lower bounds per the approved BUG-05 fix (the original used strict bounds).
 function savingsTier(openingCents) {
   const amount = openingCents / 100;
-  if (amount > 2000) return { minimum: 100_000, penalty: 5_000 };
-  if (amount > 1000 && amount < 2000) return { minimum: 50_000, penalty: 5_000 };
+  if (amount >= 2000) return { minimum: 100_000, penalty: 5_000 };
+  if (amount >= 1000) return { minimum: 50_000, penalty: 5_000 };
   return { minimum: 10_000, penalty: 2_500 };
 }
 
-// App.java:312-337 - exact boundary amounts fall through to the final tier.
+// App.java:312-337 - inclusive lower bounds per the approved BUG-04 fix.
 function loanTier(amountCents) {
   const amount = amountCents / 100;
-  if (amount > 100000) return { rate: 5.0, monthly: 50_000 };
-  if (amount < 100000 && amount > 50000) return { rate: 4.0, monthly: 40_000 };
-  if (amount < 50000 && amount > 25000) return { rate: 3.75, monthly: 35_000 };
-  if (amount < 25000 && amount > 10000) return { rate: 5.0, monthly: 25_000 };
-  if (amount < 10000 && amount > 1000) return { rate: 5.0, monthly: 10_000 };
+  if (amount >= 100000) return { rate: 5.0, monthly: 50_000 };
+  if (amount >= 50000) return { rate: 4.0, monthly: 40_000 };
+  if (amount >= 25000) return { rate: 3.75, monthly: 35_000 };
+  if (amount >= 10000) return { rate: 5.0, monthly: 25_000 };
+  if (amount >= 1000) return { rate: 5.0, monthly: 10_000 };
   return { rate: 6.0, monthly: 5_000 };
 }
 
@@ -122,9 +122,16 @@ const STREETS = [
   'Easton Ave', 'Stefko Blvd', 'Macada Rd', 'Chew St', 'Liberty St', 'Lafayette St', 'Green Pond Rd',
 ];
 
-const BRANCH_TYPES = [
-  'Full Service', 'Full Service', 'ATM', 'Full Service',
-  'ATM', 'Full Service', 'Full Service', 'ATM',
+// [branch_type, branch_name, address] - name/address added by decision D6.
+const BRANCHES = [
+  ['Full Service', 'Bethlehem - South Side', '25 W 3rd St, Bethlehem, PA 18015'],
+  ['Full Service', 'Bethlehem - Downtown', '520 Main St, Bethlehem, PA 18018'],
+  ['ATM', 'Lehigh University - Packard Lab', '19 Memorial Dr W, Bethlehem, PA 18015'],
+  ['Full Service', 'Allentown - Hamilton St', '840 Hamilton St, Allentown, PA 18101'],
+  ['ATM', 'Allentown - Cedar Crest', '1250 S Cedar Crest Blvd, Allentown, PA 18103'],
+  ['Full Service', 'Easton - Centre Square', '1 Centre Sq, Easton, PA 18042'],
+  ['Full Service', 'Whitehall - MacArthur Rd', '2300 MacArthur Rd, Whitehall, PA 18052'],
+  ['ATM', 'Emmaus - Main St', '415 Main St, Emmaus, PA 18049'],
 ];
 
 // [name, category]; category drives realistic purchase amounts.
@@ -147,7 +154,7 @@ const PURCHASE_RANGE = {
 // Static entities
 // ---------------------------------------------------------------------------
 
-const branches = BRANCH_TYPES.map((branch_type) => ({ branch_id: nextId('B'), branch_type }));
+const branches = BRANCHES.map(([branch_type, branch_name, address]) => ({ branch_id: nextId('B'), branch_type, branch_name, address }));
 const fullService = branches.filter((b) => b.branch_type === 'Full Service');
 const vendors = VENDORS.map(([vendor_name, category]) => ({ vendor_id: nextId('V'), vendor_name, category }));
 
@@ -404,8 +411,8 @@ const sql = [
   '',
   insert('customer', ['customer_id', 'customer_name', 'birthday', 'address'],
     customers.map((c) => [sqlStr(c.customer_id), sqlStr(c.customer_name), sqlStr(c.birthday), sqlStr(c.address)])),
-  insert('branch', ['branch_id', 'branch_type'],
-    branches.map((b) => [sqlStr(b.branch_id), sqlStr(b.branch_type)])),
+  insert('branch', ['branch_id', 'branch_type', 'branch_name', 'address'],
+    branches.map((b) => [sqlStr(b.branch_id), sqlStr(b.branch_type), sqlStr(b.branch_name), sqlStr(b.address)])),
   insert('account', ['account_id', 'account_type', 'balance', 'interest_rate'],
     accounts.map((a) => [sqlStr(a.account_id), sqlStr(a.account_type), money(a.balance), a.interest_rate.toFixed(2)])),
   insert('checking', ['account_id'],
