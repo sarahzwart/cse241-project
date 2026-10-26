@@ -105,7 +105,9 @@ Functions: `supabase/migrations/20261026000004_business_functions.sql`; tests: `
 - [ ] End-to-end tests for each operation (Playwright)
 
 ## Phase 6 — Deploy & portfolio
-- [ ] Deploy to Vercel with env vars `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `DEMO_PASSWORD` (see `web/.env.example`)
+- [x] Netlify config — `netlify.toml` (base `web/`, Node 22, OpenNext adapter applied automatically)
+- [ ] Deploy to Netlify from GitHub with env vars `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` (secret), `DEMO_PASSWORD` (see `web/.env.example`)
+- [ ] Smoke test the deployed site
 - [ ] README: architecture, how the migration preserved behavior, screenshots
 - [ ] Link from portfolio site
 
