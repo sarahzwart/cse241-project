@@ -9,7 +9,7 @@ import { Flash, Loading } from './ui';
 export default function Home(props: PageProps<'/'>) {
   return (
     <>
-      <h1>Welcome to NSL Bank</h1>
+      <h1>Welcome to Bank Demo</h1>
       <p className="muted">
         A demo of my CSE241 database project: the original Oracle schema and Java business rules,
         rebuilt on Supabase (PostgreSQL) with a Next.js frontend. All data is fictional.
