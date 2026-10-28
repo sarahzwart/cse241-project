@@ -1,5 +1,5 @@
 # The Next.js app lives in web/; the repo root holds the database tooling.
-# Netlify applies its Next.js (OpenNext) adapter automatically.
+# Netlify's Next.js (OpenNext) adapter is loaded by the [[plugins]] entry below.
 #
 # Required environment variables (set in Netlify, never committed):
 #   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (mark as secret), DEMO_PASSWORD
@@ -12,3 +12,8 @@
 
 [build.environment]
   NODE_VERSION = "22"
+
+# Load the Next.js runtime explicitly; without it .next is served as plain
+# static files and every route 404s.
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
